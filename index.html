@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" data-page-node-id="4u7znibZqE3aH2NRMv0trH">
+<head data-page-node-id="EJrASTfcIknJ2SEEw9QHeg">
+<meta charset="UTF-8" data-page-node-id="C3p0RRYDgX37mCkQdYAwev">
+<!-- viewport-fit=cover plus safe-area padding in CSS, so a notch or home bar never clips content -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" data-page-node-id="ywUAQHiCBN6csoJRq7qFSF">
+<title>Superstar's Star Jar</title>
+<meta name="description" content="A star-jar reward workbench for Superstar — daily check-ins, moods, bonus stars, prize shop and a star calendar." data-page-node-id="oAm4r2XXQi3zbkUOnsS2RB">
+<meta name="theme-color" content="#FF7FA6" media="(prefers-color-scheme: light)" data-page-node-id="rgM3OtHTD9cMAkfmRpVdqB">
+<meta name="color-scheme" content="light" data-page-node-id="Jm5KZcsXy0yQ8DbPNfLgMO">
+<meta name="mobile-web-app-capable" content="yes" data-page-node-id="aVXuDNZOhN4vObV79CSQlE">
+<meta name="apple-mobile-web-app-capable" content="yes" data-page-node-id="BCbFvKoRYyC40g8sb8ebJI">
+<meta name="apple-mobile-web-app-status-bar-style" content="default" data-page-node-id="Cnw5zagjkwSGxfbADAWHnA">
+<meta name="apple-mobile-web-app-title" content="Star Jar" data-page-node-id="FDWWU7MmzFMVCfdTvAn32G">
+<link rel="manifest" href="manifest.json" data-page-node-id="ERPoSpITAxD9LimF4I6acY">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" data-page-node-id="aJd4oOmElNMGR32YE3UBIE">
+<link rel="icon" href="assets/favicon-64.png" sizes="64x64" type="image/png" data-page-node-id="xzqTMFwtQhnkpg1kCDoqnV">
+<link rel="preconnect" href="https://fonts.googleapis.com" data-page-node-id="ih3bTPK7rZCjHoDaUhGmKA">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin data-page-node-id="xFrwL6QXiGAL86U9f37eZQ">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" data-page-node-id="pADJZTvOdN8VcP2MPx6O1c">
+<link rel="stylesheet" href="styles.css" data-page-node-id="wv1GgSe2PZ4Zs1XVYzTXCY">
+</head>
+<body data-page-node-id="7AkY2iCt0pzLp9zWpgH59G">
+
+<!-- ambient background -->
+<div class="bg-canvas" aria-hidden="true" data-page-node-id="pUIKIUf9jNRUDmLJqttP0Z"><i data-page-node-id="53wBaqyTpKp1AHyGZq9E5h"></i><i data-page-node-id="KR3Q4et96oVjLSTcicAjsO"></i><i data-page-node-id="IMG29grErO98JcBKoh9DzQ"></i><i data-page-node-id="lZ9dSEL3WM8ruBGz0PS9GU"></i></div>
+<div class="bg-grain" aria-hidden="true" data-page-node-id="xSPE9Ad7wyHCC2Q7MBkKBG"></div>
+
+<!-- reusable SVG defs -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" data-page-node-id="sihnsW1xIDjx6GgmK4PzNa">
+  <defs data-page-node-id="ehQhXXYZYYiS4k4Pwt0nJg">
+    <symbol id="i-star" viewBox="0 0 24 24" data-page-node-id="MEBipW2ATe5YZLYhqutmHT">
+      <path d="M12 2.6l2.72 5.9 6.28.74-4.66 4.3 1.22 6.36L12 16.76 6.44 19.9l1.22-6.36L3 9.24l6.28-.74z" data-page-node-id="mnixqqnWRFzFVKROUCJ49O"/>
+    </symbol>
+    <symbol id="i-star-o" viewBox="0 0 24 24" data-page-node-id="p0Y7GBFER34FvcYqufOA1o">
+      <path d="M12 2.6l2.72 5.9 6.28.74-4.66 4.3 1.22 6.36L12 16.76 6.44 19.9l1.22-6.36L3 9.24l6.28-.74z"
+            fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" data-page-node-id="MKNjyam0tUXGVGfTuNoepJ"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" data-page-node-id="TQZNO1PsCJfAc0utDxOMeu"><path d="M4.5 12.5l5 5 10-11" data-page-node-id="FfIejHfj2pjZvX4AxHZhrN"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24" data-page-node-id="h50hFD05J7s6yTRZZNy4M6"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z" data-page-node-id="UlHCsVLJw5cCDOh4hsCr3K"/><path d="M14.5 6.5l3 3" data-page-node-id="xvNIFUBNq5YIQ27FdeAYC8"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" data-page-node-id="obuNHEFsXD3l41eSR1SdoO"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6" data-page-node-id="XAPvrWEwc2jHb4d5l8OfML"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" data-page-node-id="1r7jUBXyo02mjwekz0nrpY"><path d="M12 5v14M5 12h14" data-page-node-id="SpULPXlBdH863fhPXv2ugC"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24" data-page-node-id="4aZe4EKeDJuFQWOHKCmgOa"><path d="M15 5l-7 7 7 7" data-page-node-id="xPaKGiXL1rxVaTgKBHeffD"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24" data-page-node-id="iKUD3sdu1BCDbLA09mCsDH"><path d="M9 5l7 7-7 7" data-page-node-id="XAsMogRsWoMF1oLsvFkeKC"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24" data-page-node-id="2MT9aFTwFrAdm12iWgh1uP"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13" data-page-node-id="AVutSUXyA8JROHWQN7SKd6"/><path d="M12 7S9.5 3 7.5 4.2 9 7 12 7zm0 0s2.5-4 4.5-2.8S15 7 12 7z" data-page-node-id="CgFI3Vkx7SHnBJhxWQvi0m"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" data-page-node-id="DrutjiFWw3JxGmAtACEWr6">
+      <rect x="3.5" y="5" width="17" height="15.5" rx="3.2" data-page-node-id="ZVpQ46IoqH2maAPZ0UQvBi"/>
+      <path d="M3.5 10h17M8 3.2v3.6M16 3.2v3.6" data-page-node-id="RT4vrecqR5MXSB8wZIosTq"/>
+      <circle cx="8.6" cy="14.2" r="1.15" fill="currentColor" stroke="none" data-page-node-id="MB9qdkFp1QJF4chAZx6g7E"/>
+      <circle cx="12" cy="14.2" r="1.15" fill="currentColor" stroke="none" data-page-node-id="CSsCP1uG0SFPcOac3E7RCI"/>
+      <circle cx="15.4" cy="14.2" r="1.15" fill="currentColor" stroke="none" data-page-node-id="YIYJz31qnIiHPSeDp1rsnA"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="shell" data-page-node-id="v4U2C5zzBWGitq5dwBbAcG">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead" data-page-node-id="5CBNCgaTGp4La0YXKFA1iT">
+    <div class="brand" data-page-node-id="vu9mD7oSBkT40x4PlGKUtg">
+      <img class="brand__art" src="assets/star-jar-mascot.png" alt="A pastel jar filled with smiling stars" width="76" height="76" data-page-node-id="JpYk0DCrjWrMm0Y1UhUyl4">
+      <div class="brand__txt" data-page-node-id="fNpm2gmVAHPwMdmsiXptqz">
+        <h1 data-page-node-id="UdnRGbIev3dB3QXsldegPe">Superstar's Star Jar</h1>
+        <p data-page-node-id="c0s45Cozm0D1Om4P7y0Mdf">Every little thing you do adds a star. Stars never go away — they only add up!</p>
+      </div>
+    </div>
+    <div class="masthead__tools" data-page-node-id="ZBbwusDUSELOpEX6wWz7kG">
+      <button class="btn btn--sm btn--butter" id="btnInstall" data-page-node-id="7TNiZ4AYDsssCg9KZUGFEs">
+        <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round" data-page-node-id="Cc3KPB3OhKYXzD1yenuxp7"><path d="M12 3v12M8 11l4 4 4-4M5 20h14" data-page-node-id="lhjNettF6C8vNkOGur9hJz"/></svg>
+        Install
+      </button>
+      <div class="starpill" id="starpill" title="Total stars in the jar" data-page-node-id="TrT9rd89mGQEBi9gRQpmbG">
+        <svg class="starpill__ico" style="fill:var(--butter-500)" data-page-node-id="Ns5ddFQ7TnQMyXDdaRexkg"><use href="#i-star" data-page-node-id="dB2sbCJL6S4EkvWslnm0fk"/></svg>
+        <span data-page-node-id="DvgUts6wpbnuq1fZWiuwdR">
+          <span class="starpill__n" id="starTotal" data-page-node-id="xABtPSj3ivNlqlWgmRspE1">0</span>
+          <span class="starpill__lbl" data-page-node-id="a1Ucdoiye98bzYiPL47jc0">in the jar</span>
+        </span>
+      </div>
+      <button class="btn btn--ghost btn--icon" id="btnSettings" title="Settings" aria-label="Open settings" data-page-node-id="XRRCBHDtF6jwJGkTBzYZw4">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round" data-page-node-id="hVb6eAoOSexmb8u5sSnvIF">
+          <circle cx="12" cy="12" r="3.2" data-page-node-id="lTJpi6QYoK8KXC8l42JQuV"/>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z" data-page-node-id="3iJZfFE07iRteSPEhcoYa1"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ TABS ============ -->
+  <div class="tabbar" role="tablist" aria-label="Sections" data-page-node-id="RIDSeltzARwCyK0J09WC9v">
+    <span class="tab__ink" id="tabInk" data-page-node-id="FmJQhFhuK6KbBqjAw4dYSz"></span>
+    <button class="tab" role="tab" id="tab-daily" aria-selected="true"  aria-controls="view-daily" data-page-node-id="DuMQVpbd0q3pNkQOJY4BP3">Daily Check-in</button>
+    <button class="tab" role="tab" id="tab-jar"   aria-selected="false" aria-controls="view-jar" data-page-node-id="FMEVWjF6C2hzGADY0mGaEn">Star Jar &amp; Prizes</button>
+  </div>
+
+  <!-- ================================================================
+       VIEW 1 — DAILY CHECK-IN
+       ================================================================ -->
+  <section id="view-daily" role="tabpanel" aria-labelledby="tab-daily" data-page-node-id="OH2A3NW2pGthtxSOYIjNu2">
+
+    <!-- swipeable date rail -->
+    <div class="daterail" data-page-node-id="wXuwAVTV5dwI1DwqAK7OiN">
+      <div class="daterail__top" data-page-node-id="vLIOSvS2YQcGQLIMUYEAis">
+        <div class="daterail__wk" data-page-node-id="NKUOAnm0EqSN9ywZ93jTEI">
+          <small data-page-node-id="5L5djAJMkoXApIvQVCVwqP">This week</small>
+          <span id="weekLabel" data-page-node-id="fzfr7XNWn6eO2aX82Da8JR">—</span>
+        </div>
+        <div class="daterail__nav" data-page-node-id="yEW8epNmJDMmV7YgxfhOR5">
+          <button class="btn btn--sm" id="btnPickDate" aria-expanded="false" aria-controls="datepickDaily" data-page-node-id="ZyfutEJstdioCVxigu6U2R">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round" data-page-node-id="78lgYhwISHjDfYDJeyJCOY"><use href="#i-calendar" data-page-node-id="GS7SYDxkbCyJOEgpTrtIif"/></svg>
+            Pick a date
+          </button>
+          <button class="btn btn--sm" id="btnToday" data-page-node-id="teBwSKOztlzS94543S9GKR">Today</button>
+          <button class="btn btn--sm btn--icon" id="btnPrevWeek" aria-label="Previous week" data-page-node-id="IxzRd12JTlcjzHz9OYonVo">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round" data-page-node-id="CEZm7RgtngBGidSBoTzeZq"><use href="#i-left" data-page-node-id="qw0rYsVbHCxVDHm9q3XGYq"/></svg>
+          </button>
+          <button class="btn btn--sm btn--icon" id="btnNextWeek" aria-label="Next week" data-page-node-id="FmgCnnECPfbf7FQg4LR554">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round" data-page-node-id="bIFEVw9UjvuGfpGBQUGa4U"><use href="#i-right" data-page-node-id="uHBZ7Ukfh6q2pCBNBSOStT"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="datepick" id="datepickDaily" hidden data-page-node-id="Aanm5rl95wCoAFy1RnOYbc"></div>
+      <div class="daterail__track" id="dateTrack" role="tablist" aria-label="Pick a day" data-page-node-id="zrhhce1wFEW8m2n5aDXPFa"></div>
+    </div>
+
+    <div class="grid-2" data-page-node-id="l43HublLAXAya3ZeU9xvgb">
+      <!-- ---------- LEFT: tasks ---------- -->
+      <div class="stack" data-page-node-id="amyDXRKidORHMLlJD2ZgnN">
+
+        <div class="card" data-page-node-id="6eBxGKSWPBrBPt2U9tZvFi">
+          <div class="card__head" data-page-node-id="T56HteEYTbQmxgZoA7Q9fD">
+            <span class="card__ico" data-page-node-id="2H97FYsyCKED40arrxeY78">✅</span>
+            <h2 data-page-node-id="d4tU0dLhiMQhP2y1BB0DXG">My tasks for <span id="taskDayLabel" data-page-node-id="AxLk9uaIMjFQ2WaEbvXyf5">today</span></h2>
+            <span class="spacer" data-page-node-id="EvXT8uDHU0HPc2MFEeHyL2"></span>
+            <span class="chip chip--butter" id="taskCountChip" data-page-node-id="kS3RdTQD05t0sXUEkM5p0f">0 / 17</span>
+          </div>
+          <div class="tasklist" id="taskList" data-page-node-id="qD7Kgn6eSlGwncM6cWfQ9N"></div>
+
+          <!-- add / edit form -->
+          <form class="taskform" id="taskForm" style="margin-top:14px" data-page-node-id="m1s8kTDPF7hZTJNG37w15Z">
+            <div class="taskform__row" data-page-node-id="pixMrEYsrzHRhCBy6ARToM">
+              <div class="field" style="width:76px;flex:none" data-page-node-id="crekVRXh2aJ7aWMgDU3Ryb">
+                <label for="tfIcon" data-page-node-id="ZICcdoxaVWPsvhffk7qUp2">Icon</label>
+                <input class="input" id="tfIcon" type="text" maxlength="4" placeholder="⭐" value="⭐" data-page-node-id="jtyAlz0OTsBTrK6rBdXc2a">
+              </div>
+              <div class="field field--grow" data-page-node-id="yUHLnIry4Bnc0JCzDRml3l">
+                <label for="tfName" data-page-node-id="7HTrZtlsXznzAp5jREFzrp">What did you do?</label>
+                <input class="input" id="tfName" type="text" maxlength="70" placeholder="e.g. Feed the cat" required data-page-node-id="AJmkrYud5Pn3VCgktXEtKW">
+              </div>
+            </div>
+            <div class="taskform__row" data-page-node-id="nk4scoWMJWBvgYMiphBaUG">
+              <div class="field" data-page-node-id="zCF3yAkVkdU5GmRHDBZaDj">
+                <label for="tfStars" data-page-node-id="flLBh4QpZuUaat4rBv4izl">Stars</label>
+                <input class="input input--stars" id="tfStars" type="number" min="0" max="20" step="1" value="1" required data-page-node-id="qnlA3GbNvk0aBM38UpiTCj">
+              </div>
+              <div class="field field--grow" data-page-node-id="5N06Lqevr71TfTPmO5pH88">
+                <label for="tfCat" data-page-node-id="PSMTvsvKq6qxjBiRoj1fmy">Group</label>
+                <select class="select" id="tfCat" data-page-node-id="Yn2cabZbZNg0AY562xTspt">
+                  <option data-page-node-id="T4vgaBJGwNAZRDXWQA5wL9">Morning &amp; Night</option>
+                  <option data-page-node-id="XOCjL3ze7H4PCTgn66FRle">Learning</option>
+                  <option data-page-node-id="l7ood1l3fLD10RxFqeWhP2">Helping Out</option>
+                  <option data-page-node-id="YmELff6o0z2ijpVdQG2Gwj">Fun</option>
+                  <option data-page-node-id="XgqNMrxlSYG2AC09xRXiZw">Bravery</option>
+                  <option data-page-node-id="YlTs7jAmAFUHUrB22keUX2">Other</option>
+                </select>
+              </div>
+              <button class="btn btn--primary" type="submit" id="tfSubmit" data-page-node-id="mUqEE47fp3uj7YTGwvd4Ls">
+                <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:currentColor;stroke-width:2.8;fill:none;stroke-linecap:round" data-page-node-id="cCtp0VU8PwEVrXvflYgaY4"><use href="#i-plus" data-page-node-id="v183pICJx2p5eHD5TgQtwD"/></svg>
+                Add task
+              </button>
+              <button class="btn" type="button" id="tfCancel" hidden data-page-node-id="jd7A3MK8pMemDvO5aY4axd">Cancel</button>
+            </div>
+            <p style="font-size:.76rem;color:var(--ink-faint);font-weight:600" id="tfHint" data-page-node-id="s6G1eGB61d016Wpt2Cxzv3">
+              Harder or braver things are worth more stars — that's the whole idea.
+            </p>
+          </form>
+        </div>
+
+        <!-- mood + proud note + bonus -->
+        <div class="grid-2e" data-page-node-id="tIjCP5I4Aui13QSHHDV4iZ">
+          <div class="card card--tint-lilac" data-page-node-id="IjlVs9xekB85CyS5VgCNpp">
+            <div class="card__head" data-page-node-id="3CP9zxUkXD3lsCaZG9L4ji">
+              <span class="card__ico card__ico--lilac" data-page-node-id="iI8AyoSpdwBgxAi8Yz60yP">💭</span>
+              <h3 data-page-node-id="VYgZ7Pq2ShN4afSOQgmo9r">How I felt</h3>
+            </div>
+            <div class="moods" id="moodRow" data-page-node-id="qgzjpyAGgcvWNBxnX63Chz"></div>
+            <p style="margin-top:12px;font-size:.8rem;color:var(--ink-soft);font-weight:600" data-page-node-id="fH5Ua2gq0lNG9VHqGOL7Pr">
+              Any answer is OK. This row is for noticing patterns together, not for scoring.
+            </p>
+          </div>
+
+          <div class="card card--tint-butter" data-page-node-id="LTk4jN7LMKWm1JHgL7DwMT">
+            <div class="card__head" data-page-node-id="0VFVAH0j4CkkUEe9Yld0r5">
+              <span class="card__ico card__ico--butter" data-page-node-id="uIG3bxVAgcxVaGJHn8uZjH">🌈</span>
+              <h3 data-page-node-id="LhU5mmxkHCIeJ3n1NU2V1j">Bonus stars</h3>
+            </div>
+            <div id="bonusList" class="stack" style="gap:8px;margin-bottom:12px" data-page-node-id="z8lDZs00GsZsvSjnHEZTS4"></div>
+            <form class="bonus-row" id="bonusForm" data-page-node-id="4AXxkiyCA2IToc3WH5fMjC">
+              <div class="field field--grow" style="min-width:130px" data-page-node-id="fLFQlZojkD71P2nyWrhwrF">
+                <label for="bfLabel" class="sr-only" style="position:absolute;left:-9999px" data-page-node-id="HLuwar7z7htcX7em6VuC3G">Bonus reason</label>
+                <input class="input" id="bfLabel" type="text" maxlength="40" placeholder="Extra nice thing…" required data-page-node-id="bdW3TRevsmYbARezQrpDu2">
+              </div>
+              <input class="input input--stars" id="bfStars" type="number" min="1" max="10" step="1" value="1" aria-label="Bonus stars" required data-page-node-id="6q6Hv6x8TAjL0rVU8M5f8E">
+              <button class="btn btn--butter" type="submit" data-page-node-id="tFBODxxkKCfDAmsYYZBX5B">
+                <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:currentColor;stroke-width:2.8;fill:none;stroke-linecap:round" data-page-node-id="t2DCfaRaTWt2kTsYJlymT4"><use href="#i-plus" data-page-node-id="zsmtZk8ZjSKDx5Zyq7jndG"/></svg>
+                Add
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card card--tint-pink" data-page-node-id="tP0n0F8HqhwpoYIapoihn9">
+          <div class="card__head" data-page-node-id="3rKmAk6fqsmxylo6ZXIdQB">
+            <span class="card__ico" data-page-node-id="VLX2imZzRn1NF1Z3dFXJv6">💬</span>
+            <h3 data-page-node-id="PWyimwweIoaj64i1huIYFB">One thing I'm proud of today</h3>
+          </div>
+          <textarea class="notebox" id="proudBox" maxlength="180"
+            placeholder="I finished my homework by myself!"></textarea>
+          <p style="margin-top:8px;font-size:.76rem;color:var(--ink-faint);font-weight:600" id="proudCount" data-page-node-id="DytnBV7HB9zVHUNM85gxCk">0 / 180</p>
+        </div>
+
+      </div>
+
+      <!-- ---------- RIGHT: today at a glance ---------- -->
+      <div class="stack" data-page-node-id="fiaNdb6iev9ugeu2KksAbB">
+
+        <div class="card card--tint-mint" data-page-node-id="jeYAgF5dP6qthDCJ1LFD8W">
+          <div class="card__head" data-page-node-id="CoM3Ma4Fr4Vj45ZCDZEm9o">
+            <span class="card__ico card__ico--mint" data-page-node-id="rYm8s0rtDQWWcBXObLSXxq">⭐</span>
+            <h2 data-page-node-id="d9lDGT1304YguK0p3a4mCN">Stars I earned</h2>
+          </div>
+          <div class="tiles" data-page-node-id="ERz7XzpYG7QGoo1vciiYBO">
+            <div class="tile tile--butter" data-page-node-id="kV3UTRGY5DPzuYa5IyodFw">
+              <span class="tile__l" data-page-node-id="qr4I6nKDYBC0UX6dMWCA7P">Today</span>
+              <span class="tile__v" id="sToday" data-page-node-id="C3tHHaeqE3S8qS8viGDmhl">0</span>
+              <span class="tile__s" id="sTodaySub" data-page-node-id="dX0yNlUpnk8AlG0uHMyPiT">nothing yet</span>
+            </div>
+            <div class="tile tile--mint" data-page-node-id="xnWXsNX0bF6tKmDQ4dBSFI">
+              <span class="tile__l" data-page-node-id="z5WXZrB4CMoTTjGJPcHVGy">This week</span>
+              <span class="tile__v" id="sWeek" data-page-node-id="tj4mltcY7AUQHYtmSCtbZJ">0</span>
+              <span class="tile__s" id="sWeekSub" data-page-node-id="ZLDBnX85Sa3Am7INqS0VmD">0 of 7 days active</span>
+            </div>
+            <div class="tile tile--pink" data-page-node-id="mufK9qa2eJZiGZVKibd3GA">
+              <span class="tile__l" data-page-node-id="WfQKyYC9wyHNdGyVeLgiGV">Streak</span>
+              <span class="tile__v" id="sStreak" data-page-node-id="fEYFBFQhi6DUYwvssV1jCc">0</span>
+              <span class="tile__s" id="sStreakSub" data-page-node-id="tWKRz7XJJ5WuEsR1CytChb">day in a row</span>
+            </div>
+            <div class="tile tile--lilac" data-page-node-id="6sf0sGyQXWjJaWvTbE9mR7">
+              <span class="tile__l" data-page-node-id="lJfo5DA5zLcItAU0gHQbth">How stars are earned</span>
+              <span class="tile__v" style="font-size:.86rem;line-height:1.35;padding-top:4px" data-page-node-id="shyPFz74XDEY93GuQtd2Ae">
+                Tick a task — that's it</span>
+              <span class="tile__s" data-page-node-id="CYWBaUCLA7NH9ATx6T92zP">no extra bonus for showing up</span>
+            </div>
+          </div>
+          <div style="margin-top:16px" data-page-node-id="ObpWkBHoZzHQE0p1NuzQEH">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px" data-page-node-id="1PBapRZHNleod8v4voRF9N">
+              <span style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)" data-page-node-id="qHZ3aJHwR27o9lRKVa72MC">Last 14 days</span>
+              <span style="font-size:.76rem;font-weight:800;color:var(--mint-700)" id="streakLabel" data-page-node-id="XhKgGKxTFoz4ZA9Ygfkht4">—</span>
+            </div>
+            <div class="bars" id="miniBars" data-page-node-id="jf9RAs50ySHcwzL4iD0v1p"></div>
+          </div>
+        </div>
+
+        <div class="card card--tint-lilac" data-page-node-id="XsDb7jFJmZyAYSF9PhicG1">
+          <div class="card__head" data-page-node-id="cbjjkIGUYlSh9UXP3Yn582">
+            <span class="card__ico card__ico--lilac" data-page-node-id="ArGWl8ZzxG9FjDEXB7fnVi">💪</span>
+            <h3 data-page-node-id="T6SOd8p84GmRcYHLipaYX8">Things I'm good at</h3>
+            <span class="spacer" data-page-node-id="ZvL6MyN6JMRpzVI7il4Pes"></span>
+            <button class="btn btn--sm" id="btnAddGood" data-page-node-id="uf6nOa4aJ1YOuVc2vD2Yht">+ Add</button>
+          </div>
+          <div class="goodat" id="goodAtList" data-page-node-id="RWi2NsKTiWvDCEmtvAqKWP"></div>
+          <p style="margin-top:12px;font-size:.76rem;color:var(--ink-faint);font-weight:600" data-page-node-id="l7XGwOfyxGRw8ZJn3jIS4e">
+            Add one whenever you or someone else notices something!
+          </p>
+        </div>
+
+        <div class="card card--tint-pink" data-page-node-id="GocHouOOx9ypsa3J7uqkl1">
+          <div class="card__head" data-page-node-id="uaZpaSekxmQmFtBLnBzVWF">
+            <span class="card__ico card__ico--sky" data-page-node-id="YmbrwQN5YgEl3Llu95BuIN">🧾</span>
+            <h3 data-page-node-id="QxMqu1aRgtQH2zFSRaVffA">Everything that happened</h3>
+            <span class="spacer" data-page-node-id="5IxiS1WBtUiNOATHufgGHB"></span>
+            <span class="chip chip--sky" id="eventCountChip" data-page-node-id="VB4IwyN02l3pJPHhPGPUD9">0 events</span>
+          </div>
+          <p style="font-size:.8rem;color:var(--ink-soft);font-weight:600;margin-bottom:12px" data-page-node-id="SU7vdg4HCyN4rXpNYoBfjs">
+            One line per event, added forever — un-ticking a task writes a new line
+            rather than erasing the old one.
+          </p>
+          <div class="timeline" id="timeline" data-page-node-id="g9RQeV488Yox2JavDt05RW"></div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:13px" data-page-node-id="GxqDaTFRuJBS0tUlutdFNq">
+            <button class="btn btn--sm" id="btnExportJsonl" data-page-node-id="Y0gdhc5gBUJPkqOIrHXlrf">Export JSONL</button>
+            <button class="btn btn--sm" id="btnExportCsv" data-page-node-id="BpUxWYiFpsKd8KQ5YZ9j42">Export CSV</button>
+            <button class="btn btn--sm btn--ghost" id="btnEventDay" data-page-node-id="yvOdDXx1y4wzScYCFhB2yh">Today only</button>
+            <button class="btn btn--sm btn--butter" id="btnCloudSetup" data-page-node-id="Bx1ge83erlvZSVtCM3AkCD">Cloud account</button>
+          </div>
+        </div>
+
+        <div class="card card--tint-sky" data-page-node-id="5lhcPUCxnAWXtdp9Ulc759">
+          <div class="card__head" data-page-node-id="qoUxBUuUEzgcceeZbE4pOh">
+            <span class="card__ico card__ico--sky" data-page-node-id="irBGNS52EU5HhHAyTetCCG">☁️</span>
+            <h3 data-page-node-id="U6K03VBiLnEpZCJJDQeD4U">Keep in sync</h3>
+            <span class="spacer" data-page-node-id="oec5FcIhOD3clDqjB7EWxe"></span>
+            <span class="chip chip--sky" id="cloudChip" data-page-node-id="Rqavz5SGj6k4GH0GNTU2iM">not signed in</span>
+          </div>
+          <p style="font-size:.8rem;color:var(--ink-soft);font-weight:600;margin-bottom:12px" data-page-node-id="mNdkxwrHGOGgj7YZf7G2hD">
+            Sign in once on each device and they keep each other up to date. Stars are never
+            overwritten — the two jars merge. Not signing in is fine too; everything still works
+            on this device.
+          </p>
+          <div id="cloudPanel" data-page-node-id="7xF9C77Lja5E3dBdgn6JnR"></div>
+        </div>
+
+        <div class="card" data-page-node-id="9WVUcjJN3TuGRLRX3SnRSW">
+          <div class="card__head" data-page-node-id="udyedOMOEbpQaVFUeqFweo">
+            <span class="card__ico card__ico--sky" data-page-node-id="R6PFpXRKNbkCJTvfQmnpaa">📅</span>
+            <h3 data-page-node-id="DoEjXcYDNDTbpedG7WHk0N">Jump to a day</h3>
+          </div>
+          <p style="font-size:.82rem;color:var(--ink-soft);font-weight:600;margin-bottom:12px" data-page-node-id="RuxuSiZOj3fppg7PS3pVnY">
+            Pick any day below to see exactly which stars it earned. Full calendar lives in
+            <strong data-page-node-id="rSFktHiMuH5WAUvZ94yxAu">Star Jar &amp; Prizes</strong>.
+          </p>
+          <button class="btn" id="btnGoCalendar" style="width:100%" data-page-node-id="ovTO6EcyGv0cN5LPESCdA3">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round" data-page-node-id="lSEVnBNtZ1seJWxgBFRQ51"><use href="#i-right" data-page-node-id="1cUOtc2TQtmDRSKFue6i38"/></svg>
+            Open the calendar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       VIEW 2 — STAR JAR & PRIZES
+       ================================================================ -->
+  <section id="view-jar" role="tabpanel" aria-labelledby="tab-jar" hidden data-page-node-id="aBlAkWLnkbYDEAsn8biw1m">
+
+    <div class="grid-2 grid-2--even" data-page-node-id="POr71nez8eUmd2rMiwDCOP">
+
+      <!-- ---------- jar ---------- -->
+      <div class="stack" data-page-node-id="fCg1bFVajrnEbm60f2EAyf">
+        <div class="card card--tint-pink" data-page-node-id="brOWuB3LoSAkrjjb7B0EKz">
+          <div class="card__head" data-page-node-id="GKSejfKdxmuK3dUsLQ1kCE">
+            <span class="card__ico" data-page-node-id="uMFlGoX4t5u9gbHkPyGtNn">🌟</span>
+            <h2 data-page-node-id="1MnSWcoGUsfIVycoDgHXJU">My jar</h2>
+            <span class="spacer" data-page-node-id="dn9gJEsuf329odWRThWdk6"></span>
+            <span class="chip" id="jarChip" data-page-node-id="Pp7NPpAQbS2uR45EljGp5x">0% full</span>
+          </div>
+          <div class="jarwrap" data-page-node-id="8c1NKJ91J7LRBaPy8KCanX">
+            <div class="jar-stage" id="jarStage" data-page-node-id="p6bkbIDDYBQWoszdOdSvM6"></div>
+            <p class="jar-msg" id="jarMsg" data-page-node-id="W37gCebf8uRi1tds2d8XBP">—</p>
+          </div>
+          <div class="tiles" style="margin-top:18px" data-page-node-id="0tgsa1ULS0PL0NDWXikDyA">
+            <div class="tile tile--butter" data-page-node-id="yf1FsoSeK8IIuRWbKMjuc0">
+              <span class="tile__l" data-page-node-id="jSzAYBACEIbx9bJMAp0DeM">Earned</span>
+              <span class="tile__v" id="jTotal" data-page-node-id="mpjWAmKtx4TGDqcCbHNbAu">0</span>
+              <span class="tile__s" id="jTotalSub" data-page-node-id="3ako2J3HtugndTt0Ko86it">in the jar</span>
+            </div>
+            <div class="tile tile--pink" data-page-node-id="6NwjAJ773Hy03jDfzjSvK5">
+              <span class="tile__l" data-page-node-id="kWp9fqjq5qA5aEidG1oquQ">Needed</span>
+              <span class="tile__v" id="jGoal" data-page-node-id="yppcsxKp51p4cq37SrviaV">60</span>
+              <span class="tile__s" data-page-node-id="fgI8WFLQdobKZnfLoZWtXh">to fill the jar</span>
+            </div>
+            <div class="tile tile--mint" id="jSpendTile" data-page-node-id="llGigx8tdoMDPX5eDD1HMa">
+              <span class="tile__l" data-page-node-id="ZO252zBnooWD5COJ1XTLwg">To spend</span>
+              <span class="tile__v" id="jBalance" data-page-node-id="O5SICllZIFJW0NOBbxG534">0</span>
+              <span class="tile__s" id="jBalanceSub" data-page-node-id="nm3UJyQDexJCSAyjR13kMU">none spent yet</span>
+            </div>
+            <div class="tile tile--sky" data-page-node-id="7WcpAyQAcIq40qT6zvXWEs">
+              <span class="tile__l" data-page-node-id="FYPAiGmNHWw0vQ4TACUl6V">Days active</span>
+              <span class="tile__v" id="jDays" data-page-node-id="jUpmytZNjKNiQXjOWAlmSn">0</span>
+              <span class="tile__s" data-page-node-id="RxBqSmkbz9yv5kUHE4aN6Z">check-ins so far</span>
+            </div>
+          </div>
+          <p class="jar-legend" id="jarLegend" hidden data-page-node-id="vzzC9CqJ8YCzR1kKIqeC4D"></p>
+        </div>
+
+        <div class="card card--tint-butter" data-page-node-id="61HHyUsoJ2HQcqaUNuOgqA">
+          <div class="card__head" data-page-node-id="hLFKJvDHowd7Af3vTlhkUQ">
+            <span class="card__ico card__ico--butter" data-page-node-id="GWd7zbHBOKTuTobV34wt7e">🏆</span>
+            <h3 data-page-node-id="mwF9uGuKWMjQ7KjlNAn3Dg">When the jar is full</h3>
+          </div>
+          <p style="font-family:var(--f-display);font-weight:700;font-size:1.24rem;color:var(--butter-700);text-wrap:pretty" id="rewardText" data-page-node-id="eKqfKhSAvfzCxRGJ9HF5A6">—</p>
+          <div class="field" style="margin-top:14px" data-page-node-id="geZSLpTLAm4aAOmTQEIOBe">
+            <label for="rewardInput" data-page-node-id="2uIKRgIE731322OuUq2T38">Change the big reward</label>
+            <input class="input" id="rewardInput" type="text" maxlength="60" placeholder="Movie night + ice cream" data-page-node-id="EjjlFWpj92gG5lachCss3H">
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- calendar + prizes ---------- -->
+      <div class="stack" data-page-node-id="e5Tdx3cprAB8RWl3saGBk1">
+
+        <div class="card" data-page-node-id="Xjxx2lwPIXhzRKqmLivKGa">
+          <div class="card__head" data-page-node-id="o2PJgCTKXjsD0eITGquNWr">
+            <span class="card__ico card__ico--peach" data-page-node-id="VcIC3xHBmfD9NcsHETxAXn">📅</span>
+            <h2 data-page-node-id="FPcooJEaKNsGlnyDjVL146">Star calendar</h2>
+          </div>
+          <div class="cal__head" data-page-node-id="Ippu1GOa7Te6xPVqKqBm8m">
+            <span class="cal__title" id="calTitle" data-page-node-id="X4ZLhkan2dJvkJ156zGTKr">—</span>
+            <div class="cal__nav" data-page-node-id="ArBuEG68jjlyeEdg1LD4xL">
+              <button class="btn btn--sm" id="btnPickCalDate" aria-expanded="false" aria-controls="datepickCal" data-page-node-id="NBt5HmaJvN25Q0maVuCePM">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round" data-page-node-id="7wbAX5Ox2wGDfido0kHWwA"><use href="#i-calendar" data-page-node-id="FCRavqtVBH20JBNwsSVF2i"/></svg>
+                Jump to
+              </button>
+              <button class="btn btn--sm btn--icon" id="calPrev" aria-label="Previous month" data-page-node-id="aj3pijGdL8KVekJUgUsFEN">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round" data-page-node-id="IcDv1jtsnVHET4THK1ZSzv"><use href="#i-left" data-page-node-id="3U1GRRvl6kfobrKZELDH5A"/></svg>
+              </button>
+              <button class="btn btn--sm" id="calToday" data-page-node-id="B801O6mEWW3EAxCMNbDBVG">Today</button>
+              <button class="btn btn--sm btn--icon" id="calNext" aria-label="Next month" data-page-node-id="sY3xS2MtIl0E5cnbqIJJVy">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round" data-page-node-id="NceKglg0pySVdWK5Q0it8U"><use href="#i-right" data-page-node-id="6OtrZJLvZEHbbaqJZNxaXI"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="datepick datepick--cal" id="datepickCal" hidden data-page-node-id="odVayDdpym3uDLV6m2vXa2"></div>
+          <div class="cal__dows" data-page-node-id="WTEY9BhIVhcdOiHUhI2iZt"><span data-page-node-id="gbqIudbfIb4hXc7OVF0VB2">Mon</span><span data-page-node-id="EFw62V42TfOXzTk2CVOymE">Tue</span><span data-page-node-id="bp1PkAcE3II5jWxz57JELi">Wed</span><span data-page-node-id="b7fqVKKMAXsAYMj3AopmvQ">Thu</span><span data-page-node-id="eluKzzwpFYfjtDFtxagGTx">Fri</span><span data-page-node-id="YkOMuYMmbWgISnVap0Qs9m">Sat</span><span data-page-node-id="9ymGMsfvMuD7wzAil5UBAb">Sun</span></div>
+          <div class="cal__grid" id="calGrid" data-page-node-id="D4LExwSpEjpAbkwPNDf4US"></div>
+          <div class="cal__legend" data-page-node-id="5rcJGYpjeIGp9hSWbmYQUL">
+            <span data-page-node-id="HX7Iw1g6qcHmtkHMgE2I57"><i style="background:var(--butter-200)" data-page-node-id="SoxOxB6ENqXuQ9Fb9Y69hp"></i>Some stars</span>
+            <span data-page-node-id="ols03aVEBe6xGkc3qekrNh"><i style="background:var(--mint-300)" data-page-node-id="h6FKivcySqwvsgOi3r77FU"></i>Busy day (8+)</span>
+            <span data-page-node-id="zCoLwrM6yd7X4vryggH2D0"><i style="background:var(--sky-200);border:2px solid var(--sky-400)" data-page-node-id="jJaMtyMhh4LGEGPaps0K5y"></i>Today</span>
+          </div>
+        </div>
+
+        <div class="card card--tint-mint" data-page-node-id="2ra83XFS5ZWruyUXTeEbEW">
+          <div class="card__head" data-page-node-id="AAzSyLFI46ULJg8LgkHBqT">
+            <span class="card__ico card__ico--mint" data-page-node-id="z5szmcpcclvnURV6GBKU8f">
+              <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round" data-page-node-id="orzHPcfqDVU6rOLur55MLl"><use href="#i-gift" data-page-node-id="RRkxuLMdiZgoTPDt6BRjTu"/></svg>
+            </span>
+            <h2 data-page-node-id="vipgAUxm7qIQMBEc9uDlbC">Prize shop</h2>
+            <span class="spacer" data-page-node-id="chQCalUg2JALALINCfi9h6"></span>
+            <span class="chip chip--mint" id="prizeBalChip" data-page-node-id="HatwKx4K5nK3EQZOZnWYwy">0 to spend</span>
+          </div>
+          <div class="prizes" id="prizeList" data-page-node-id="lKhXfujgTbWLtw3DjlaRO6"></div>
+          <form class="taskform" id="prizeForm" style="margin-top:14px" data-page-node-id="5ifpxxSjBbCKbhQxXt1Nkg">
+            <div class="taskform__row" data-page-node-id="ngkGImJy3JFQ1OF91tbs8W">
+              <div class="field" style="width:76px;flex:none" data-page-node-id="jAGSy9jp5JaqUmfGaam0Hl">
+                <label for="pfIcon" data-page-node-id="kOVsjO86g62cVbEZ6v0EHR">Icon</label>
+                <input class="input" id="pfIcon" type="text" maxlength="4" placeholder="🎁" value="🎁" data-page-node-id="rCa87gg3nnDbGuTmSGZXGa">
+              </div>
+              <div class="field field--grow" data-page-node-id="PCS2U21eEhZkWetVKCueYF">
+                <label for="pfName" data-page-node-id="ZByZG6FQEzIt5RMKkj0z3p">Prize name</label>
+                <input class="input" id="pfName" type="text" maxlength="40" placeholder="e.g. Stay up 30 min" required data-page-node-id="IsdpMA88owqMSVoz1xD7bZ">
+              </div>
+            </div>
+            <div class="taskform__row" data-page-node-id="haQn3dt3s13DO921WCQ5BS">
+              <div class="field" data-page-node-id="Y6pXYzCECUSBkZ54CmgdGv">
+                <label for="pfCost" data-page-node-id="lXG8AHfGv9u1evkVqp5YRH">Cost (stars)</label>
+                <input class="input input--stars" id="pfCost" type="number" min="1" max="500" step="1" value="10" required data-page-node-id="RnHAMMDkmD3utXoZ9ZUpV9">
+              </div>
+              <label class="checkline" data-page-node-id="yBSacJDBADB3iCdesDMeNp">
+                <input type="checkbox" id="pfRepeat" data-page-node-id="64oAXdTd09o5zlrhlUeyBC">
+                <span data-page-node-id="drPZNYuhIw37mq2xdLcWay">Can be redeemed again</span>
+              </label>
+              <button class="btn btn--mint" type="submit" id="pfSubmit" data-page-node-id="RXcAjGChO3UG0enEZhMjrA">
+                <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:currentColor;stroke-width:2.8;fill:none;stroke-linecap:round" data-page-node-id="GiWxYDn3MlRUv1Eb6tAga2"><use href="#i-plus" data-page-node-id="8gCVatd3QbfdvFAqxGS04i"/></svg>
+                Add prize
+              </button>
+              <button class="btn" type="button" id="pfCancel" hidden data-page-node-id="jqAc0jpVZ8v4rEFdPpMbnC">Cancel</button>
+            </div>
+            <p style="font-size:.76rem;color:var(--ink-faint);font-weight:600" data-page-node-id="w27JtzOmCAVhEvcWjp1GYE">
+              Redeeming takes the stars out of <strong data-page-node-id="qyhVSokNO3XSRTj8xwWyjV">To spend</strong>. The jar's
+              <strong data-page-node-id="tBByF4gjx0HoMGxMrsz5wR">Earned</strong> total never drops — stars already earned are never taken away.
+            </p>
+          </form>
+        </div>
+
+        <div class="card card--tint-pink" data-page-node-id="mA8gKZyN6Ve2Yy5cfQ2DEN">
+          <div class="card__head" data-page-node-id="uI1lmKIapCTK1GXHt7E4aY">
+            <span class="card__ico card__ico--butter" data-page-node-id="8pqkjjnkLuIwiKGAXHIkMF">🧾</span>
+            <h2 data-page-node-id="4tcLzbrRPNgd1PhgSWFzSZ">Stars I've spent</h2>
+            <span class="spacer" data-page-node-id="84JyJrkXLQpBTPKYbSebXw"></span>
+            <span class="chip chip--pink" id="spentChip" data-page-node-id="NRmU6czz0qmJrGb74ghh6N">0★ spent</span>
+          </div>
+          <div class="redeemlist" id="redeemList" data-page-node-id="c4EOlJNsVXJSLHjgfvWfVX"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- trends -->
+    <div class="grid-2e" style="margin-top:20px" data-page-node-id="1m3J08GHLmDCMTTZhMZvlh">
+      <div class="card" data-page-node-id="grvFpcBlJiqsIaRFbXR6A5">
+        <div class="card__head" data-page-node-id="zfjOrRBEbj2PB8wDOrLvGO">
+          <span class="card__ico card__ico--sky" data-page-node-id="r8lCWotFHHWfGfzYqH4beR">📈</span>
+          <h3 data-page-node-id="Kxs4ajFunENf6tadkItpNg">Last 14 days</h3>
+        </div>
+        <div class="bars" id="trendBars" style="height:170px" data-page-node-id="1Lqfed7bFWWPMIJyKWrbGl"></div>
+        <p class="chart-hint" data-page-node-id="hQXYExDYmLgOvUmPw75AbG">Stars earned per day. Click a bar to open that day.</p>
+      </div>
+      <div class="card card--tint-lilac" data-page-node-id="Dxu9isoBBxPkCP28YYYKlA">
+        <div class="card__head" data-page-node-id="Z48cRosHvaYcQE0xyakN2R">
+          <span class="card__ico card__ico--lilac" data-page-node-id="5vq5FoALKxABJlGFcj21ly">🎯</span>
+          <h3 data-page-node-id="TgBsjwLL7fUmTxhU1JNvkB">Which tasks earn the most</h3>
+        </div>
+        <div class="bars" id="taskBars" style="height:170px" data-page-node-id="7zVrhIuzdrlP92D8UskJK9"></div>
+        <p class="chart-hint" data-page-node-id="zeR5sDOBPq5CPaTsCJMxMD">Total stars each habit has earned, all time.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer style="margin-top:44px;text-align:center;font-size:.78rem;color:var(--ink-faint);font-weight:600;line-height:1.7" data-page-node-id="t4wHmIqJsa1jMNLfdm59JN">
+    <p data-page-node-id="HsDUZGdZ1QOLkmRmjUQC0S">Stars are never taken away — a missed day simply earns nothing. Start again today.</p>
+    <p style="margin-top:6px" data-page-node-id="gDnHvCeAnFCByHXTeEd89Z">
+      <button class="btn btn--sm" id="btnExport" data-page-node-id="RIuDoE0s7VLWgJf33hMEwZ">Export my jar (JSON)</button>
+      <button class="btn btn--sm" id="btnImport" data-page-node-id="Yc5V8F7lmLHUTkis8Wc90k">Import</button>
+      <button class="btn btn--sm btn--danger" id="btnReset" data-page-node-id="b1Cjrdxv25rzwosv3k6nRC">Reset demo data</button>
+      <input type="file" id="fileImport" accept="application/json" hidden data-page-node-id="yThjiHgPEkjegqGEE7ZSkr">
+    </p>
+  </footer>
+</div>
+
+<!-- toast + modal -->
+<div class="toast-wrap" id="toastWrap" aria-live="polite" data-page-node-id="UQDQAh5LAQNJHonik2HnP9"></div>
+
+<div class="modal" id="modal" hidden data-page-node-id="zPuXIgXCVrSYxBXwHcb7gX">
+  <div class="modal__scrim" data-close data-page-node-id="VuCL34RO1mgTkniI2zeV0g"></div>
+  <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="modalTitle" data-page-node-id="RkT0mTHlRPfvJZuJnqlYG6">
+    <h3 id="modalTitle" data-page-node-id="PpDc9Jipso8oH477eYgWaC">Title</h3>
+    <p class="sub" id="modalSub" data-page-node-id="2tNutzTMbGUW0I2nqtrV91"></p>
+    <div id="modalBody" data-page-node-id="Nng9eA8DUpNqkAC1EeRHdD"></div>
+    <div class="modal__acts" id="modalActs" data-page-node-id="AgE7OlAhneQsrUI52TvjH8"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<!-- cloud.js and supabase.js must load BEFORE app.js: app.js boots the sync
+     providers, and a `typeof Cloud === 'undefined'` guard would skip it. -->
+<script src="cloud.js"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

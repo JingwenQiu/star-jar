@@ -1,0 +1,60 @@
+-- ============================================================
+--  Superstar's Star Jar — Supabase setup
+--  Run this ONCE in: Supabase dashboard → SQL Editor → New query → Run
+-- ============================================================
+
+-- 1. Current jar snapshot (one row per account)
+create table if not exists public.jar_state (
+  id         uuid        primary key default gen_random_uuid(),
+  owner_id   uuid        not null default auth.uid(),
+  saved_at   bigint      not null default 0,
+  payload    jsonb       not null,
+  updated_at timestamptz not null default now(),
+  constraint jar_state_owner_key unique (owner_id)
+);
+
+-- 2. Append-only activity log.
+--    The unique (owner_id, event_id) is what lets two devices both upload the
+--    same event safely: the second insert is ignored, never duplicated.
+--    Only SELECT and INSERT policies are created below, so the table is
+--    physically append-only — no update, no delete.
+create table if not exists public.jar_events (
+  id         bigint      generated always as identity primary key,
+  owner_id   uuid        not null default auth.uid(),
+  event_id   text        not null,
+  ts         bigint      not null,
+  day        text        not null,
+  type       text        not null,
+  payload    jsonb,
+  created_at timestamptz not null default now(),
+  constraint jar_events_owner_event_key unique (owner_id, event_id)
+);
+
+-- 3. Row Level Security — this is the actual security boundary
+alter table public.jar_state  enable row level security;
+alter table public.jar_events enable row level security;
+
+drop policy if exists jar_state_own on public.jar_state;
+create policy jar_state_own on public.jar_state
+  for all to authenticated
+  using (owner_id = auth.uid())
+  with check (owner_id = auth.uid());
+
+drop policy if exists jar_events_read_own on public.jar_events;
+create policy jar_events_read_own on public.jar_events
+  for select to authenticated
+  using (owner_id = auth.uid());
+
+drop policy if exists jar_events_insert_own on public.jar_events;
+create policy jar_events_insert_own on public.jar_events
+  for insert to authenticated
+  with check (owner_id = auth.uid());
+
+-- 4. Make sure the client role can use these tables
+grant usage on schema public to anon, authenticated;
+grant all on table public.jar_state  to authenticated;
+grant select, insert on table public.jar_events to authenticated;
+
+-- Optional: helpful when checking from the dashboard
+comment on table public.jar_state  is 'One star-jar snapshot per signed-in user';
+comment on table public.jar_events is 'Append-only activity log; no update or delete policy';
