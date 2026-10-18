@@ -3,7 +3,7 @@
 一个给小朋友用的星星罐奖励工作台。**纯前端、无需注册、离线可用**，数据保存在本机，
 可选接入 Supabase 云端在多设备间同步。
 
-线上地址：<https://superstar-star-jar.app.workbuddy.host/>
+线上地址：<https://jingwenqiu.github.io/star-jar/>
 
 ---
 
@@ -107,7 +107,7 @@
 6. 右栏 **Keep in sync** → 填邮箱 → **链接**或 **6 位验证码**登录
 
 > **验证码更稳**：部分邮箱（尤其 QQ 邮箱）会重写链接并丢掉令牌，导致点链接没反应。
-> 遇到这种情况点「**Use a 6-digit code instead**」，验证码不会被改写。
+> 遇到这种情况点「**Enter the 6-digit code**」，验证码不会被改写。
 
 同步原理：事件日志只追加、按 ID 唯一，数据库有 `UNIQUE (owner_id, event_id)` 约束，
 两台设备同时上传同一条事件只会保留一份。**先拉取再上传，合并时星星取并集**，永不互相覆盖。
