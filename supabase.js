@@ -111,36 +111,54 @@ const Supa = {
       } catch (e) {
         this.sdkState = 'error';
         this.lastError = 'The sync library could not be loaded.';
+        paintCloud();
         return false;
       }
       const g = window.supabase;
       if (!g || typeof g.createClient !== 'function') {
         this.sdkState = 'error';
         this.lastError = 'The sync library loaded but is not the expected version.';
+        paintCloud();
         return false;
       }
       this.client = g.createClient(this.url, this.key, {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
-          detectSessionInUrl: true,      // picks up the magic-link hash on return
+          detectSessionInUrl: false,   // sign-in is by 6-digit code, not a link
         },
       });
       // Without this the state stays 'loading' forever and the panel never
       // renders the sign-in form — the panel gates on this exact value.
       this.sdkState = 'ready';
     }
-    if (!this.client) return false;
+    if (!this.client) { paintCloud(); return false; }
 
-    const { data, error } = await this.client.auth.getSession();
-    if (error) {
+    /* WHICH PANEL STATE THIS ENDS IN MATTERS. init() is the only place that
+       turns "loading…" into a usable form, and it runs in parallel with the
+       other provider's init(). If the last repaint happened while this one
+       was still fetching its script, nothing would repaint afterwards and
+       the card stayed stuck on a spinner — so repaint here, on EVERY exit,
+       including the failure ones. A dead host also makes getSession() reject
+       rather than return { error }, which used to propagate out of init() and
+       skip the repaint entirely; catch it and fall back to "not signed in". */
+    try {
+      const { data, error } = await this.client.auth.getSession();
+      if (error) {
+        this.user = null;
+        this.status = 'signed-out';
+      } else if (data && data.session) {
+        this.user = data.session.user;
+        this.status = 'ok';
+        setTimeout(() => this.sync(true), 400);
+      } else {
+        this.status = 'signed-out';
+      }
+    } catch (e) {
       this.user = null;
       this.status = 'signed-out';
-    } else if (data && data.session) {
-      this.user = data.session.user;
-      this.status = 'ok';
-      setTimeout(() => this.sync(true), 400);
     }
+    paintCloud();
     return true;
   },
 
@@ -211,62 +229,47 @@ const Supa = {
     Store.save();
   },
 
-  /* ---------- auth: passwordless magic link ----------
-     One tap in the email instead of typing a code, and no password for a
-     child to lose. The link returns to this origin, where detectSessionInUrl
-     picks the token out of the URL fragment.
+  /* ---------- auth: passwordless 6-digit code ----------
+     No password for a child to lose, and no link for a mail provider to
+     rewrite. The parent types the code that arrives by email; a matching
+     code proves the same account, which is what lets two devices sync. */
+  /* Send a 6-digit code to the email. This is the PRIMARY path: a code has
+     no URL to be rewritten or corrupted, and the parent proves identity by
+     typing it back here — two devices that enter the same code the same
+     account, so their jars sync.
 
-     WHY THERE IS ALSO A CODE PATH: a magic link carries its token in the URL
-     fragment, and some mail providers rewrite links before delivering them.
-     QQ Mail, for one, wraps every link in a spam-check redirect
-     (wx.mail.qq.com/xmspamcheck/...) which can drop the fragment — the user
-     lands on the right page with no token and no error, so sign-in silently
-     fails and looks like "I have to copy the URL into a browser". A 6-digit
-     code has no URL to corrupt, so it is offered as an equal alternative. */
-  async sendLink(address) {
-    if (this.busy) return;
-    const email = String(address || '').trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      this.status = 'error';
-      this.lastError = 'Please type a valid email address.';
-      return;
-    }
-    this.busy = true; this.status = 'ok'; paintCloud();
-    try {
-      const { error } = await this.client.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: location.origin + location.pathname },
-      });
-      if (error) throw error;
-      this.email = email;
-      this.status = 'link-sent';
-      this.lastError = '';
-    } catch (e) {
-      this.status = 'error';
-      this.lastError = supaFriendly(e);
-    } finally {
-      this.busy = false; paintCloud();
-    }
-  },
+     NOTE ON THE TEMPLATE: Supabase's default "Magic Link" email template
+     contains {{ .ConfirmationURL }}, i.e. it mails a LINK. To mail the
+     digits instead, Authentication → Email Templates → Magic Link must
+     contain {{ .Token }} (and NOT {{ .ConfirmationURL }}). sendCode cannot
+     force this from the browser — it is a one-time dashboard setting that
+     the setup guide walks through.
 
-  /* Same email, but ask for the 6-digit code instead of a link. Immune to
-     whatever the mail provider does to links. */
+     emailRedirectTo is deliberately omitted: it only matters for the link
+     flow and, when the redirect allow-list is not yet configured, makes a
+     perfectly good code request fail with "Redirect URL not allowed". */
   async sendCode(address) {
     if (this.busy) return;
+    if (!this.client) {
+      // The library never finished loading — a dead network, most likely.
+      // Say so rather than throwing on this.client.auth.
+      this.status = 'error';
+      this.lastError = 'Sync is not ready yet. Check the connection and reload, then try again.';
+      paintCloud();
+      return;
+    }
     const email = String(address || '').trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       this.status = 'error';
       this.lastError = 'Please type a valid email address.';
+      paintCloud();
       return;
     }
     this.busy = true; this.status = 'ok'; paintCloud();
     try {
       const { error } = await this.client.auth.signInWithOtp({
         email,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: location.origin + location.pathname,
-        },
+        options: { shouldCreateUser: true },
       });
       if (error) throw error;
       this.email = email;
@@ -294,19 +297,30 @@ const Supa = {
       return;
     }
     this.busy = true; paintCloud();
+    /* The OTP type has moved around between supabase-js releases: current
+       projects verify an emailed one-time code as type 'email', older ones
+       expected 'magiclink'. Try them in order and keep the first that the
+       server accepts, so this works across project ages. */
+    const TYPES = ['email', 'magiclink'];
     try {
-      const { error } = await this.client.auth.verifyOtp({
-        email: this.email,
-        token,
-        type: 'email',
-      });
-      if (error) throw error;
+      let lastErr = null;
+      let ok = false;
+      for (const type of TYPES) {
+        const { error } = await this.client.auth.verifyOtp({ email: this.email, token, type });
+        if (!error) { ok = true; break; }
+        lastErr = error;
+        // A real "wrong/expired code" is final — only a type mismatch is
+        // worth retrying with the next type.
+        if (!/type|magiclink|otp|expired|invalid|token/i.test(String(error.message || ''))
+            || /expired/i.test(String(error.message || ''))) break;
+      }
+      if (!ok) throw lastErr || new Error('Verification failed.');
       const { data } = await this.client.auth.getSession();
       this.user = (data && data.session && data.session.user) || null;
       this.status = 'ok';
-      this.message = 'Signed in — stars now sync to every device.';
+      this.message = 'Verified — stars now sync to every device.';
       this.lastError = '';
-      setTimeout(() => this.sync(true), 500);
+      setTimeout(() => this.sync(true), 300);
     } catch (e) {
       this.status = 'awaiting-code';
       this.lastError = supaFriendly(e);
@@ -383,7 +397,7 @@ const Supa = {
       if (!d.empty) {
         Store.state = mergeJars(Store.state, row.payload);
         Store.save();
-        $('#brand__txt h1').textContent = `${Store.state.profile.name}'s Star Jar`;
+        $('.brand__txt h1').textContent = `${Store.state.profile.name}'s Star Jar`;
         document.title = `${Store.state.profile.name}'s Star Jar`;
         renderAll();
         const n = d.gainedTicks || d.events;

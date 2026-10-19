@@ -2,6 +2,16 @@
 --  Superstar's Star Jar — Supabase setup
 --  Run this ONCE in: Supabase dashboard → SQL Editor → New query → Run
 -- ============================================================
+--
+--  ALONG WITH THIS SQL, DO ONE DASHBOARD SETTING:
+--  Star Jar signs you in with a 6-DIGIT CODE emailed to you, not a link.
+--  Supabase's default "Magic Link" email template sends a LINK
+--  ({{ .ConfirmationURL }}). Change it so the email carries the digits:
+--      Authentication → Email Templates → Magic Link
+--      replace {{ .ConfirmationURL }} with {{ .Token }}
+--  Without this the email arrives as a long link and there is no code to
+--  type, so sign-in on this app cannot complete.
+-- ============================================================
 
 -- 1. Current jar snapshot (one row per account)
 create table if not exists public.jar_state (

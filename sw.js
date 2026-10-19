@@ -5,7 +5,7 @@
    files (instant, works with no signal) and network-only for Google Fonts.
    Bump CACHE when shipping new files; activate() clears older ones.
    ============================================================ */
-const CACHE = 'star-jar-v11';
+const CACHE = 'star-jar-v12';
 
 const SHELL = [
   './',

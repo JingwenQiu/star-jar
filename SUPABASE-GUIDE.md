@@ -27,36 +27,48 @@ Star Jar 的跨设备自动同步需要一个云端数据库。这个方案**完
 
 > 这段 SQL 建两张表并开启了安全策略：只有登录用户能读写自己的数据；事件表**只允许新增**，不允许修改或删除。
 
-## 第 3 步 · 允许登录后跳回来（**两处都要改**）
+## 第 3 步 · 让邮件发「6 位验证码」而不是链接（**关键**）
+
+Star Jar 用**6 位数字验证码**验证身份：你在应用里填邮箱 → 收到一封含 6 位数字的邮件 → 把数字填回应用 → 数字一致即证明是同一个人，两台设备就归到同一个账号，数据随之同步。
+
+但 Supabase 默认的邮件模板发的是**链接**（`{{ .ConfirmationURL }}`）。所以要把它改成验证码：
+
+1. 左侧菜单 **Authentication → Email Templates**
+2. 点 **Magic Link** 这一项
+3. 把正文里的 `{{ .ConfirmationURL }}` 替换成 **`{{ .Token }}`**
+   （只留 `{{ .Token }}`，不要保留 `{{ .ConfirmationURL }}`）
+4. 保存
+
+> 改完后，邮件里出现的是 6 位数字，例如 `739204`。
+> 如果邮件里仍是一长串链接，说明这一步没生效，回到这里重做。
+
+## 第 4 步 · 允许登录后跳回来（**两处都要改**）
 
 1. 左侧菜单 **Authentication → URL Configuration**
 2. **Site URL** 填：
    ```
-   https://superstar-star-jar.app.workbuddy.host
+   https://jingwenqiu.github.io/star-jar/
    ```
 3. **Redirect URLs** 里**添加**这一行（注意是「添加」，别覆盖原有的）：
    ```
-   https://superstar-star-jar.app.workbuddy.host
+   https://jingwenqiu.github.io/star-jar/
    ```
 4. 确认 **Authentication → Providers → Email** 是**打开**的（默认开）
 
 > ⚠️ **Site URL 和 Redirect URLs 是两个不同的框，只改一个不行。**
 >
-> 新建项目时 **Site URL 默认是 `http://localhost:3000`**。如果只加了 Redirect URLs
-> 而没改 Site URL，登录邮件里的链接仍会指向 `localhost:3000`，
-> 点开后手机上就是 **「找不到网页 / HTTP ERROR 404」**。
->
-> 判别方法：看邮件里那个链接指向哪个地址。出现 `localhost:3000` 就是这一步没做。
+> 新建项目时 **Site URL 默认是 `http://localhost:3000`**。
+> 验证码流程本身不依赖跳转，但把这两处设对可以避免其它跳转异常。
 
-### 邮件里链接打不开？
+### 邮件里是链接而不是验证码？
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
-| 链接指向 `localhost:3000` | Site URL 没改 | 回到上面第 2 步改 Site URL |
-| 链接指向本应用域名但提示 404 | 页面已重新发布，Service Worker 缓存 | 删掉桌面图标，从链接重装 |
+| 邮件里是一长串链接 | 模板还是默认的 `{{ .ConfirmationURL }}` | 回到第 3 步改成 `{{ .Token }}` |
 | 邮件根本没来 | 免费额度限流，或进了垃圾箱 | 等几分钟再试一次；看垃圾箱 |
+| 验证码填进去报「过期或无效」 | 验证码有时效，或已用过 | 重新点「Email me a 6-digit code」拿新码 |
 
-## 第 4 步 · 拿到两个值
+## 第 5 步 · 拿到两个值
 
 1. 左侧菜单最下方 **Project Settings → API**（老界面叫 API Settings）
 2. 复制这两个：
@@ -71,9 +83,9 @@ Star Jar 的跨设备自动同步需要一个云端数据库。这个方案**完
 > **项目 URL 在哪里：** Project Settings → API 页面。新版后台它的名字叫 **API URL**（以前叫 Project URL），
 > 格式是 `https://你的随机串.supabase.co`。“API URL”就是对的，不要去找别的地方。
 
-## 第 5 步 · 填进应用
+## 第 6 步 · 填进应用
 
-1. 打开 <https://superstar-star-jar.app.workbuddy.host/>
+1. 打开 <https://jingwenqiu.github.io/star-jar/>
 2. 滚到 **Everything that happened** 卡片，点 **Cloud account**
 3. 粘贴 **API URL** 和 **publishable key**
 4. 点 **Connect**
@@ -86,21 +98,24 @@ Star Jar 的跨设备自动同步需要一个云端数据库。这个方案**完
 |---|---|
 | 不像 Supabase 项目地址 | URL 抄错了或漏了 `https://` |
 | tables are not ready | 第 2 步的 SQL 没跑成功 |
-| anon key was rejected | 第 4 步的 key 抄错了 |
+| anon key was rejected | 第 5 步的 key 抄错了 |
 | 15 秒没响应 | URL 不对，或网络问题 |
 
 ---
 
-## 第 6 步 · 在每台设备上登录
+## 第 7 步 · 在每台设备上登录
 
 每台设备各做一次：
 
 1. 打开网址 → 右栏 **☁️ Keep in sync**
-2. 填家长邮箱 → 点 **Email me a sign-in link**
-3. 去邮箱点那封邮件里的链接 → 自动跳回应用并登录
-4. 另一台设备重复一遍
+2. 填家长邮箱 → 点 **Email me a 6-digit code**
+3. 去邮箱找到那封邮件，把里面的 **6 位数字**填进应用
+4. 点 **Verify & sync**
+5. 另一台设备重复一遍（用**同一个邮箱**）
 
-登录后勾任务，另一台点一下就同步过去了。
+两台设备用**同一个邮箱 + 同一套 6 位验证码**登录，就归到同一个账号，勾的任务会同步过去。
+
+> 就算两台设备收到的验证码数字不同也没关系——只要能各自通过验证，它们登录的就是同一个邮箱账号，数据照常同步。
 
 ---
 
@@ -110,7 +125,7 @@ Star Jar 的跨设备自动同步需要一个云端数据库。这个方案**完
 
 **但邮件有发送频率限制。** Supabase 免费版每个项目每小时只能发几封登录邮件。两台设备各登录一次没问题，但如果反复点「再发一次」可能超限，等一小时即可。面板会明确提示。
 
-**密码不需要。** 用的是「魔术链接」——点邮件里的链接直接登录。孩子那边不需要任何操作，也不需要记密码。
+**密码不需要。** 用的是「邮箱验证码」——填邮箱收一封 6 位数字的邮件，把数字填回应用即可登录。孩子那边不需要任何操作，也不需要记密码。
 
 **数据是私有的。** anon key 本来就是设计给公开网页用的，它本身没有任何权限；真正的防护在数据库的行级安全策略里，别人拿不到你的数据。
 

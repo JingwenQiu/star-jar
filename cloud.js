@@ -247,7 +247,7 @@ const Cloud = {
       if (!d.empty) {
         Store.state = mergeJars(Store.state, st.data.payload);
         Store.save();
-        $('#brand__txt h1').textContent = `${Store.state.profile.name}'s Star Jar`;
+        $('.brand__txt h1').textContent = `${Store.state.profile.name}'s Star Jar`;
         document.title = `${Store.state.profile.name}'s Star Jar`;
         renderAll();
         this.message = `Brought in ${d.gainedTicks || d.events} new star${(d.gainedTicks || d.events) === 1 ? '' : 's'}`;

@@ -154,7 +154,7 @@ a { color:var(--accent-deep); }
 .tabbar{
   position:relative; display:inline-flex; gap:4px; padding:6px;
   background:var(--surface); border:2px solid var(--line);
-  border-radius:var(--r-pill); box-shadow:var(--e1); margin-bottom:24px;
+  border-radius:var(--r-pill); box-shadow:var(--e1); margin-bottom:20px;
 }
 .tab{
   position:relative; z-index:1; padding:11px 24px; border-radius:var(--r-pill);
@@ -536,8 +536,17 @@ a { color:var(--accent-deep); }
 .bonus-pill button{ width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:var(--butter-200); color:#fff; font-size:.9rem; line-height:1; transition:transform var(--t-fast); }
 .bonus-pill button:hover{ transform:scale(1.18); background:var(--butter-500); }
 
-/* ---------- 13. Stat tiles ---------- */
-.tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(126px,1fr)); gap:12px; }
+/* ---------- 13. Stat tiles ----------
+   Explicit column counts, not auto-fit. Auto-fit chose 3 columns for the
+   Daily "Stars I earned" rail (~485px wide on desktop), so four tiles laid
+   out 3 + 1 and left the last tile orphaned on its own row with a hole
+   beside it. A fixed 4-across (or 2x2 when the tile is narrow) never
+   orphans a tile. */
+.tiles{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+/* The Daily summary reads best 2x2 in that narrow rail, but 4-across once
+   the layout collapses to one column and the card spans the full width. */
+.tiles--2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+@media (max-width:1080px){ .tiles--2{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
 .tile{
   padding:15px 16px; border-radius:var(--r-md);
   border:2px solid var(--line); background:var(--surface-2);

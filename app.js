@@ -635,60 +635,49 @@ function paintCloud() {
   }
 
   if (!P.user) {
-    // Supabase has two "we sent something" states: link-sent and
-    // awaiting-code. Both need the panel to switch into a waiting layout.
-    // (These were previously swapped, so asking for a code showed nothing.)
-    const waiting = P.status === 'link-sent' || P.status === 'awaiting-code';
+    // The 6-digit code is the primary path. Supabase's default template mails
+    // a link, but a link can be rewritten by the mail provider (QQ Mail wraps
+    // every link in a spam redirect and drops the token) — a code cannot.
+    // So: email a code, type it back, and a matching code means both devices
+    // are the same account and their jars can sync.
+    const waiting = P.status === 'awaiting-code' || P.status === 'link-sent';
+    // Supa keeps the address on `email`; Cloud keeps it on `pending.email`.
+    const waitEmail = P.email || (P.pending && P.pending.email) || '';
     chip.textContent = 'not signed in';
     box.innerHTML = `
       <div class="field">
         <label for="clEmail">Parent's email</label>
         <input class="input" id="clEmail" type="email" inputmode="email" autocomplete="email"
-               placeholder="you@example.com" ${waiting ? 'disabled' : ''}>
+               placeholder="you@example.com" value="${escapeHtml(waitEmail)}" ${waiting ? 'disabled' : ''}>
       </div>
-      ${waiting ? (isSupa && Supa.status === 'link-sent' ? `
+      ${waiting ? `
         <p style="margin-top:11px;font-size:.84rem;font-weight:700;color:var(--mint-700);
                   background:var(--mint-50);border:2px solid var(--mint-200);border-radius:12px;padding:11px 13px">
-          ✉️ Check ${escapeHtml((Supa.email || P.email || 'your email').replace(/^(.).*(@.*)$/, '$1•••$2'))}
-          and tap the sign-in link in it. That link brings you back here and
-          signs you in — no code to type.
+          ✉️ We emailed a 6-digit code to
+          ${escapeHtml((waitEmail || 'your email').replace(/^(.).*(@.*)$/, '$1•••$2'))}.
+          Type it below to prove it is you — the same account then syncs on
+          every device.
         </p>
-        <p style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--ink-soft)">
-          Opened the link but nothing happened? Some mail apps rewrite links and
-          lose the sign-in token. Use <b>Enter the 6-digit code</b> below —
-          that cannot be corrupted.
-        </p>
-        ${redirectHint()}` : `
         <div class="field" style="margin-top:10px">
-          <label for="clCode">Code from the email</label>
+          <label for="clCode">6-digit code from the email</label>
           <input class="input" id="clCode" inputmode="numeric" autocomplete="one-time-code"
-                 placeholder="6-digit code" maxlength="8">
-        </div>`) : ''}
+                 placeholder="123456" maxlength="8">
+        </div>` : ''}
       <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
         ${waiting
-          ? (isSupa && Supa.status === 'link-sent'
-            ? `<button class="btn" id="clUseCode">Enter the 6-digit code</button>
-               <button class="btn" id="clResend">Use a different email</button>`
-            : `<button class="btn btn--mint" id="clConfirm">Sign in</button>
-               <button class="btn" id="clResend">Use a different email</button>`)
-          : `<button class="btn btn--mint" id="clSend" ${P.busy ? 'disabled' : ''}>${
-              isSupa ? 'Email me a sign-in link' : 'Email me a code'}</button>
-             ${isSupa ? `<button class="btn" id="clSendCode" ${P.busy ? 'disabled' : ''}>
-               Enter the 6-digit code</button>` : ''}`}
+          ? `<button class="btn btn--mint" id="clConfirm" ${P.busy ? 'disabled' : ''}>
+               ${P.busy ? 'Verifying…' : 'Verify & sync'}</button>
+             <button class="btn" id="clResend">Use a different email</button>`
+          : `<button class="btn btn--mint" id="clSend" ${P.busy ? 'disabled' : ''}>
+               ${P.busy ? 'Sending…' : 'Email me a 6-digit code'}</button>`}
       </div>
       ${cloudNote()}`;
 
     const send = $('#clSend');
     if (send) {
-      send.onclick = () => (isSupa ? Supa.sendLink($('#clEmail').value)
+      send.onclick = () => (isSupa ? Supa.sendCode($('#clEmail').value)
                                    : Cloud.sendCode($('#clEmail').value));
     }
-    // The code path exists because some mail providers rewrite links and
-    // strip the token, which makes the magic link silently useless.
-    const sendCode = $('#clSendCode');
-    if (sendCode) sendCode.onclick = () => Supa.sendCode($('#clEmail').value);
-    const useCode = $('#clUseCode');
-    if (useCode) useCode.onclick = () => Supa.sendCode(Supa.email);
     const confirmBtn = $('#clConfirm');
     if (confirmBtn) {
       confirmBtn.onclick = () => (isSupa ? Supa.confirmCode($('#clCode').value)
@@ -698,7 +687,14 @@ function paintCloud() {
     const codeBox = $('#clCode');
     if (codeBox) {
       codeBox.onkeydown = (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); confirmBtn.click(); }
+        if (e.key === 'Enter') { e.preventDefault(); if (confirmBtn) confirmBtn.click(); }
+      };
+    }
+    // Enter on the email field should request a code.
+    const emailBox = $('#clEmail');
+    if (emailBox) {
+      emailBox.onkeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); if (send) send.click(); }
       };
     }
     const resend = $('#clResend');
@@ -752,26 +748,6 @@ function cloudNote() {
   return '';
 }
 
-/* A magic link aimed at the wrong place looks exactly like a dead link: no
-   error anywhere, just a 404 on a phone. The client cannot detect it — GoTrue
-   does not expose Site URL — so we state the requirement up front instead. */
-function redirectHint() {
-  // Visible, not tucked behind a disclosure: this is the single most common
-  // reason the link fails, and the person reading the email has no way to
-  // know it exists.
-  return `<div style="margin-top:10px;font-size:.78rem;font-weight:700;color:var(--ink-soft);
-                      background:var(--surface-2);border:2px solid var(--line);
-                      border-radius:12px;padding:10px 12px;line-height:1.55">
-            If the link does not open Star Jar: Supabase sends it to the project's
-            <b>Site URL</b> unless this page's address is allowed. Open
-            <b>Authentication → URL Configuration</b> and set <b>both</b>:
-            <br>· <b>Site URL</b> = <code>${escapeHtml(location.origin)}</code>
-            <br>· <b>Redirect URLs</b> — add the same address
-            <br>New projects start with <code>http://localhost:3000</code> there,
-            which is why the link 404s on a phone.
-          </div>`;
-}
-
 /* ============================================================
    CLOUD ACCOUNT SETTINGS
    ============================================================ */
@@ -783,12 +759,23 @@ function openCloudSettings() {
     body: `
       <ol style="display:grid;gap:8px;padding-left:19px;font-weight:600;font-size:.86rem;line-height:1.5;color:var(--ink-soft)">
         <li>Create a free project at <strong>supabase.com</strong></li>
-        <li>Open <strong>SQL Editor</strong>, paste <strong>SUPABASE-SETUP.sql</strong>
+        <li>Open <strong>SQL Editor</strong>, paste <strong>SUPABASE-SETUP.txt</strong>
             (it ships in this app's folder) and run it</li>
+        <li>Under <strong>Authentication → Email Templates → Magic Link</strong>,
+            make the body contain <code>{{ .Token }}</code> instead of
+            <code>{{ .ConfirmationURL }}</code>, so the email carries a
+            <strong>6-digit code</strong> (not a link)</li>
         <li>Under <strong>Authentication → URL Configuration</strong>, add
             <strong>${escapeHtml(location.origin)}</strong> to Redirect URLs</li>
         <li>Paste the two values from <strong>Project Settings → API</strong> below</li>
       </ol>
+      <p style="margin-top:11px;font-size:.78rem;font-weight:700;color:var(--butter-700);
+                background:var(--butter-50);border:2px solid var(--butter-200);border-radius:12px;padding:10px 12px;line-height:1.5">
+        Sign-in works by <strong>6-digit code</strong>: you type your email, we
+        mail a code, and you type it back to prove it is you. A matching code
+        means the same account, so your stars sync across devices. If the email
+        shows a long link instead of a code, step 3 above has not been applied yet.
+      </p>
       <div class="field" style="margin-top:14px">
         <label for="csUrl">Project URL</label>
         <input class="input" id="csUrl" placeholder="https://xxxx.supabase.co"
