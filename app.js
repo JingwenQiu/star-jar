@@ -971,6 +971,23 @@ $('#taskList').addEventListener('click', (e) => {
   }
 });
 
+/* Reads one of the From/Until text fields. Returns '' when empty, the
+   ISO string when valid, or null when malformed/out of range — the caller
+   turns null into a toast and keeps the form open for correcting. */
+function readDateField(id) {
+  const raw = String($('#' + id).value || '').trim();
+  if (!raw) return '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+  // Calendar-real check: reconstruct from the parsed date and compare, so
+  // 2026-02-31 (which Date happily rolls over to March) is rejected.
+  const d = new Date(raw + 'T00:00:00');
+  const back = isNaN(d) ? '' : d.getFullYear() + '-'
+    + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  if (back !== raw) return null;
+  if (raw < '2026-10-01' || raw > '2099-12-31') return null;
+  return raw;
+}
+
 /* add / edit task form */
 $('#taskForm').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -981,10 +998,15 @@ $('#taskForm').addEventListener('submit', (e) => {
   if (!name) return;
 
   // Optional schedule window. Empty = long-term task with no bound.
-  let from = $('#tfFrom').value || '';
-  let to = $('#tfTo').value || '';
-  if (from) from = clampDate(from);
-  if (to) to = clampDate(to);
+  // These are plain text fields (native date inputs print their format hint
+  // in the BROWSER's language — a Chinese Chrome shows 年/月/日 whatever the
+  // page says), so the value is validated here instead of by the browser.
+  let from = readDateField('tfFrom');
+  let to = readDateField('tfTo');
+  if (from === null || to === null) {
+    toast('Dates must be YYYY-MM-DD, between 2026-10-01 and 2099-12-31');
+    return;
+  }
   if (from && to && from > to) {
     toast('The start date is after the stop date — please swap them');
     return;
