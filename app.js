@@ -2148,18 +2148,24 @@ const PWA = {
   register() {
     if (!('serviceWorker' in navigator)) return;
     if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
-    navigator.serviceWorker.register('sw.js')
-      .then((reg) => {
-        reg.addEventListener('updatefound', () => {
-          const sw = reg.installing;
-          if (!sw) return;
-          sw.addEventListener('statechange', () => {
-            if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-              toast('A new version is ready — reopen to update');
-            }
-          });
-        });
-      })
+
+    /* A deploy used to leave an open page half-updated: navigation is
+       network-first, so it pulls the NEW index.html, while the subresources
+       (app.js, styles.css) come from the OLD worker's cache — new markup then
+       runs against old JS and throws. The new worker already calls
+       skipWaiting() and clients.claim(), so it takes over at once; reloading
+       when that takeover happens turns the mixed state into a clean one.
+       Only reload for a REAL update: on the very first visit there is no
+       controller yet, and reloading there would loop. updateViaCache:'none'
+       makes the update check itself skip the HTTP cache, so a fresh deploy is
+       found promptly instead of sitting behind the CDN's max-age. */
+    let hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController) { hadController = true; return; }
+      location.reload();
+    });
+
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
       .catch((e) => console.warn('Service worker registration failed.', e));
   },
 
