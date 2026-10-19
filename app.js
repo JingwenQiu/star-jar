@@ -544,29 +544,57 @@ async function exportJar(kind) {
 
 /* Dropdown helper: the button toggles its menu; a click anywhere else or on
    an item closes it. Works for both export menus (timeline card + footer). */
+/* While a menu is open, lift its containing card (or the footer) above the
+   neighbouring cards. In a clean browser the menu's own z-index already wins,
+   but an older cached stylesheet or an engine that traps z-index inside
+   card-level stacking contexts would paint the dropdown BEHIND the next card
+   (the first menu opens downward onto "Keep in sync", the footer menu opens
+   upward onto the trends card — the latter looks like a dead button).
+   Lifting the host wins regardless of which element creates the context. */
+function setMenuHost(menu, on) {
+  const host = menu.closest('.card, footer');
+  if (!host) return;
+  if (on) {
+    host.dataset.zOld = host.style.zIndex || '';
+    host.style.position = 'relative';
+    host.style.zIndex = '80';
+  } else {
+    host.style.zIndex = host.dataset.zOld || '';
+    host.style.position = '';
+    delete host.dataset.zOld;
+  }
+}
+
+function closeMenus() {
+  document.querySelectorAll('.menu').forEach((m) => {
+    m.hidden = true;
+    setMenuHost(m, false);
+  });
+}
+
 function wireMenu(btnId, menuId) {
   const btn = $('#' + btnId), menu = $('#' + menuId);
   if (!btn || !menu) return;
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     const wasOpen = !menu.hidden;
-    document.querySelectorAll('.menu').forEach((m) => { m.hidden = true; });
-    menu.hidden = wasOpen;
+    closeMenus();
+    if (!wasOpen) {
+      menu.hidden = false;
+      setMenuHost(menu, true);
+    }
     btn.setAttribute('aria-expanded', String(!wasOpen));
   });
   menu.addEventListener('click', (e) => {
     const item = e.target.closest('[data-x]');
     if (!item) return;
-    menu.hidden = true;
-    btn.setAttribute('aria-expanded', 'false');
+    closeMenus();
     exportJar(item.dataset.x);
   });
 }
 wireMenu('btnExportMenu', 'exportMenu');
 wireMenu('btnExportMenuF', 'exportMenuF');
-document.addEventListener('click', () => {
-  document.querySelectorAll('.menu').forEach((m) => { m.hidden = true; });
-});
+document.addEventListener('click', closeMenus);
 
 /* ============================================================
    SYNC — one panel, whichever provider is configured.

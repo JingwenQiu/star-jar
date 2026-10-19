@@ -900,7 +900,7 @@ button, .day, .bar, .mood, .prize, .task{ touch-action:manipulation; }
    floats below (or above with .menu--up). Click-away is handled in JS. */
 .menuwrap{ position:relative; display:inline-block; }
 .menu{
-  position:absolute; right:0; top:calc(100% + 8px); z-index:60; min-width:218px;
+  position:absolute; right:0; top:calc(100% + 8px); z-index:70; min-width:218px;
   background:var(--surface); border:2px solid var(--line-strong);
   border-radius:var(--r-md); box-shadow:var(--e3); padding:6px;
   animation:menuIn var(--t-fast) var(--ease-bounce) backwards;
