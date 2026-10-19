@@ -61,7 +61,7 @@
       <img class="brand__art" src="assets/star-jar-mascot.png" alt="A pastel jar filled with smiling stars" width="76" height="76" data-page-node-id="JpYk0DCrjWrMm0Y1UhUyl4">
       <div class="brand__txt" data-page-node-id="fNpm2gmVAHPwMdmsiXptqz">
         <h1 data-page-node-id="UdnRGbIev3dB3QXsldegPe">Superstar's Star Jar</h1>
-        <p data-page-node-id="c0s45Cozm0D1Om4P7y0Mdf">Every little thing you do adds a star. Stars never go away — they only add up!</p>
+        <p data-page-node-id="c0s45Cozm0D1Om4P7y0Mdf">Every little thing you do adds a star. Earn them, spend them, watch the jar fill up!</p>
       </div>
     </div>
     <div class="masthead__tools" data-page-node-id="ZBbwusDUSELOpEX6wWz7kG">
@@ -133,6 +133,10 @@
             <span class="spacer" data-page-node-id="EvXT8uDHU0HPc2MFEeHyL2"></span>
             <span class="chip chip--butter" id="taskCountChip" data-page-node-id="kS3RdTQD05t0sXUEkM5p0f">0 / 17</span>
           </div>
+          <div class="futurebanner" id="futureBanner" hidden>
+            <span class="futurebanner__ico">🌙</span>
+            <span>This day hasn't happened yet — you can look, but stars can't be ticked until it arrives.</span>
+          </div>
           <div class="tasklist" id="taskList" data-page-node-id="qD7Kgn6eSlGwncM6cWfQ9N"></div>
 
           <!-- add / edit form -->
@@ -163,6 +167,18 @@
                   <option data-page-node-id="YlTs7jAmAFUHUrB22keUX2">Other</option>
                 </select>
               </div>
+            </div>
+            <div class="taskform__row">
+              <div class="field">
+                <label for="tfFrom">From (optional)</label>
+                <input class="input" id="tfFrom" type="date" min="2026-10-01" max="2099-12-31">
+              </div>
+              <div class="field">
+                <label for="tfTo">Until (optional)</label>
+                <input class="input" id="tfTo" type="date" min="2026-10-01" max="2099-12-31">
+              </div>
+            </div>
+            <div class="taskform__row">
               <button class="btn btn--primary" type="submit" id="tfSubmit" data-page-node-id="mUqEE47fp3uj7YTGwvd4Ls">
                 <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:currentColor;stroke-width:2.8;fill:none;stroke-linecap:round" data-page-node-id="cCtp0VU8PwEVrXvflYgaY4"><use href="#i-plus" data-page-node-id="v183pICJx2p5eHD5TgQtwD"/></svg>
                 Add task
@@ -170,7 +186,8 @@
               <button class="btn" type="button" id="tfCancel" hidden data-page-node-id="jd7A3MK8pMemDvO5aY4axd">Cancel</button>
             </div>
             <p style="font-size:.76rem;color:var(--ink-faint);font-weight:600" id="tfHint" data-page-node-id="s6G1eGB61d016Wpt2Cxzv3">
-              Harder or braver things are worth more stars — that's the whole idea.
+              Tasks are long-term — they appear every day. Set <b>From / Until</b> only if a task
+              should start or stop on a certain date. Harder or braver things are worth more stars.
             </p>
           </form>
         </div>
@@ -286,8 +303,22 @@
           </p>
           <div class="timeline" id="timeline" data-page-node-id="g9RQeV488Yox2JavDt05RW"></div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:13px" data-page-node-id="GxqDaTFRuJBS0tUlutdFNq">
-            <button class="btn btn--sm" id="btnExportJsonl" data-page-node-id="Y0gdhc5gBUJPkqOIrHXlrf">Export JSONL</button>
-            <button class="btn btn--sm" id="btnExportCsv" data-page-node-id="BpUxWYiFpsKd8KQ5YZ9j42">Export CSV</button>
+            <span class="menuwrap">
+              <button class="btn btn--sm" id="btnExportMenu" aria-haspopup="true" aria-expanded="false">
+                <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3v12M8 11l4 4 4-4M5 20h14"/></svg>
+                Export ▾
+              </button>
+              <div class="menu" id="exportMenu" hidden>
+                <button class="menu__item" data-x="json">Whole jar — JSON</button>
+                <button class="menu__item" data-x="jsonl">Event log — JSONL</button>
+                <button class="menu__item" data-x="csv">Event log — CSV</button>
+                <button class="menu__item" data-x="xls">Spreadsheet — Excel</button>
+              </div>
+            </span>
+            <button class="btn btn--sm btn--mint" id="btnImport2" title="Bring in a jar file from another device">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V3M8 7l4-4 4 4M5 20h14"/></svg>
+              Import / sync
+            </button>
             <button class="btn btn--sm btn--ghost" id="btnEventDay" data-page-node-id="yvOdDXx1y4wzScYCFhB2yh">Today only</button>
             <button class="btn btn--sm btn--butter" id="btnCloudSetup" data-page-node-id="Bx1ge83erlvZSVtCM3AkCD">Cloud account</button>
           </div>
@@ -349,9 +380,9 @@
           </div>
           <div class="tiles" style="margin-top:18px" data-page-node-id="0tgsa1ULS0PL0NDWXikDyA">
             <div class="tile tile--butter" data-page-node-id="yf1FsoSeK8IIuRWbKMjuc0">
-              <span class="tile__l" data-page-node-id="jSzAYBACEIbx9bJMAp0DeM">Earned</span>
+              <span class="tile__l" data-page-node-id="jSzAYBACEIbx9bJMAp0DeM">In the jar</span>
               <span class="tile__v" id="jTotal" data-page-node-id="mpjWAmKtx4TGDqcCbHNbAu">0</span>
-              <span class="tile__s" id="jTotalSub" data-page-node-id="3ako2J3HtugndTt0Ko86it">in the jar</span>
+              <span class="tile__s" id="jTotalSub" data-page-node-id="3ako2J3HtugndTt0Ko86it">ready to spend</span>
             </div>
             <div class="tile tile--pink" data-page-node-id="6NwjAJ773Hy03jDfzjSvK5">
               <span class="tile__l" data-page-node-id="kWp9fqjq5qA5aEidG1oquQ">Needed</span>
@@ -359,9 +390,9 @@
               <span class="tile__s" data-page-node-id="fgI8WFLQdobKZnfLoZWtXh">to fill the jar</span>
             </div>
             <div class="tile tile--mint" id="jSpendTile" data-page-node-id="llGigx8tdoMDPX5eDD1HMa">
-              <span class="tile__l" data-page-node-id="ZO252zBnooWD5COJ1XTLwg">To spend</span>
+              <span class="tile__l" data-page-node-id="ZO252zBnooWD5COJ1XTLwg">Earned all time</span>
               <span class="tile__v" id="jBalance" data-page-node-id="O5SICllZIFJW0NOBbxG534">0</span>
-              <span class="tile__s" id="jBalanceSub" data-page-node-id="nm3UJyQDexJCSAyjR13kMU">none spent yet</span>
+              <span class="tile__s" id="jBalanceSub" data-page-node-id="nm3UJyQDexJCSAyjR13kMU">before any prizes</span>
             </div>
             <div class="tile tile--sky" data-page-node-id="7WcpAyQAcIq40qT6zvXWEs">
               <span class="tile__l" data-page-node-id="FYPAiGmNHWw0vQ4TACUl6V">Days active</span>
@@ -456,8 +487,9 @@
               <button class="btn" type="button" id="pfCancel" hidden data-page-node-id="jqAc0jpVZ8v4rEFdPpMbnC">Cancel</button>
             </div>
             <p style="font-size:.76rem;color:var(--ink-faint);font-weight:600" data-page-node-id="w27JtzOmCAVhEvcWjp1GYE">
-              Redeeming takes the stars out of <strong data-page-node-id="qyhVSokNO3XSRTj8xwWyjV">To spend</strong>. The jar's
-              <strong data-page-node-id="tBByF4gjx0HoMGxMrsz5wR">Earned</strong> total never drops — stars already earned are never taken away.
+              Redeeming really spends the stars — they come out of the jar and the
+              total drops. Every redemption is recorded under
+              <strong data-page-node-id="qyhVSokNO3XSRTj8xwWyjV">Stars I've spent</strong> below, where it can also be undone.
             </p>
           </form>
         </div>
@@ -497,13 +529,22 @@
   </section>
 
   <footer style="margin-top:44px;text-align:center;font-size:.78rem;color:var(--ink-faint);font-weight:600;line-height:1.7" data-page-node-id="t4wHmIqJsa1jMNLfdm59JN">
-    <p data-page-node-id="HsDUZGdZ1QOLkmRmjUQC0S">Stars are never taken away — a missed day simply earns nothing. Start again today.</p>
+    <p data-page-node-id="HsDUZGdZ1QOLkmRmjUQC0S">A missed day simply earns nothing — no stars are lost. Start again today.</p>
     <p style="margin-top:6px" data-page-node-id="gDnHvCeAnFCByHXTeEd89Z">
-      <button class="btn btn--sm" id="btnExport" data-page-node-id="RIuDoE0s7VLWgJf33hMEwZ">Export my jar (JSON)</button>
-      <button class="btn btn--sm" id="btnImport" data-page-node-id="Yc5V8F7lmLHUTkis8Wc90k">Import</button>
+      <span class="menuwrap">
+        <button class="btn btn--sm" id="btnExportMenuF" aria-haspopup="true" aria-expanded="false">Export ▾</button>
+        <div class="menu menu--up" id="exportMenuF" hidden>
+          <button class="menu__item" data-x="json">Whole jar — JSON</button>
+          <button class="menu__item" data-x="jsonl">Event log — JSONL</button>
+          <button class="menu__item" data-x="csv">Event log — CSV</button>
+          <button class="menu__item" data-x="xls">Spreadsheet — Excel</button>
+        </div>
+      </span>
+      <button class="btn btn--sm btn--mint" id="btnImport" data-page-node-id="Yc5V8F7lmLHUTkis8Wc90k">Import</button>
       <button class="btn btn--sm btn--danger" id="btnReset" data-page-node-id="b1Cjrdxv25rzwosv3k6nRC">Reset demo data</button>
       <input type="file" id="fileImport" accept="application/json" hidden data-page-node-id="yThjiHgPEkjegqGEE7ZSkr">
     </p>
+    <p style="margin-top:6px">To sync another device: <b>Export</b> the whole jar there, then <b>Import</b> the file here — the two jars merge, nothing is overwritten.</p>
   </footer>
 </div>
 

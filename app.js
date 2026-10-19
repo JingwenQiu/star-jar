@@ -198,11 +198,12 @@ function stepDay(dir) {
   if (next < 0) { UI.cursor = addDays(days[0], dir); }
   else if (next > 6) { UI.cursor = addDays(days[6], dir); }
   else UI.cursor = days[next];
+  UI.cursor = clampDate(UI.cursor);
   renderAll();
 }
 
-$('#btnPrevWeek').onclick = () => { UI.cursor = addDays(UI.cursor, -7); renderAll(); };
-$('#btnNextWeek').onclick = () => { UI.cursor = addDays(UI.cursor, 7); renderAll(); };
+$('#btnPrevWeek').onclick = () => { UI.cursor = clampDate(addDays(UI.cursor, -7)); renderAll(); };
+$('#btnNextWeek').onclick = () => { UI.cursor = clampDate(addDays(UI.cursor, 7)); renderAll(); };
 $('#btnToday').onclick = () => { UI.cursor = todayISO(); renderAll(); };
 
 /* keyboard nav */
@@ -216,21 +217,44 @@ document.addEventListener('keydown', (e) => {
 
 /* ============================================================
    DATE PICKER  ·  year / month / day selects
+   ------------------------------------------------------------
+   The selectable window is DATE_MIN … DATE_MAX (2026-10-01 … 2099-12-31).
+   Changing year/month/day only fills the selects in — the cursor moves
+   when Go is tapped, so picking 2099-12-31 never jumps twice on the way.
    ============================================================ */
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
-const YEAR_SPAN = 6;   // this year ± 6
+const YEAR_MIN = Number(DATE_MIN.slice(0, 4));   // 2026
+const YEAR_MAX = Number(DATE_MAX.slice(0, 4));   // 2099
+const MONTH_MIN_IN_MIN_YEAR = Number(DATE_MIN.slice(5, 7)) - 1;   // October
+const MONTH_MAX_IN_MAX_YEAR = Number(DATE_MAX.slice(5, 7)) - 1;   // December
 
 function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
 
+/* Months offered for a picked year — the boundary years clip their list. */
+function monthsForYear(y) {
+  let lo = 0, hi = 11;
+  if (y === YEAR_MIN) lo = MONTH_MIN_IN_MIN_YEAR;
+  if (y === YEAR_MAX) hi = MONTH_MAX_IN_MAX_YEAR;
+  return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+}
+
+function fillMonthOptions(box, y, keepM) {
+  const mS = $('[data-dp="m"]', box);
+  const months = monthsForYear(y);
+  mS.innerHTML = months
+    .map((i) => `<option value="${i}">${MONTH_NAMES[i]}</option>`).join('');
+  mS.value = String(months.includes(keepM) ? keepM : months[0]);
+  return Number(mS.value);
+}
+
 /* Build one picker into a container. `value` is an ISO date. */
 function renderDatePicker(box, value) {
-  const d = parseISO(value);
+  const d = parseISO(clampDate(value));
   const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
-  const thisYear = new Date().getFullYear();
 
   const years = [];
-  for (let i = -YEAR_SPAN; i <= YEAR_SPAN; i++) years.push(thisYear + i);
+  for (let v = YEAR_MIN; v <= YEAR_MAX; v++) years.push(v);
 
   box.innerHTML = `
     <div class="datepick__grid">
@@ -242,16 +266,11 @@ function renderDatePicker(box, value) {
       </label>
       <label class="datepick__cell">
         <span>Month</span>
-        <select class="select select--sm" data-dp="m">
-          ${MONTH_NAMES.map((v, i) => `<option value="${i}" ${i === m ? 'selected' : ''}>${v}</option>`).join('')}
-        </select>
+        <select class="select select--sm" data-dp="m"></select>
       </label>
       <label class="datepick__cell">
         <span>Day</span>
-        <select class="select select--sm" data-dp="d">
-          ${Array.from({ length: daysInMonth(y, m) }, (_, i) => i + 1)
-            .map((v) => `<option value="${v}" ${v === day ? 'selected' : ''}>${v}</option>`).join('')}
-        </select>
+        <select class="select select--sm" data-dp="d"></select>
       </label>
       <button class="btn btn--sm btn--primary datepick__go" data-dp="go">Go</button>
     </div>
@@ -261,41 +280,48 @@ function renderDatePicker(box, value) {
       <button class="btn btn--sm btn--ghost" data-dp="q" data-off="-7">Last week</button>
       <button class="btn btn--sm btn--ghost" data-dp="q" data-off="7">Next week</button>
     </div>`;
-  box.dataset.dpym = `${y}-${m}`;
+  const mReal = fillMonthOptions(box, y, m);
+  rebuildDayOptions(box, y, mReal, day);
+  box.dataset.dpym = `${y}-${mReal}`;
 }
 
-/* Wire a picker: reading the three selects is always safe (day is clamped),
-   so the cursor can move the moment any one of them changes. */
+/* Reads the three selects into a clamped ISO date. */
+function readDatePicker(box) {
+  const y = Number($('[data-dp="y"]', box).value);
+  const m = Number($('[data-dp="m"]', box).value);
+  const day = Math.min(Number($('[data-dp="d"]', box).value) || 1, daysInMonth(y, m));
+  return clampDate(iso(new Date(y, m, day)));
+}
+
+/* Wire a picker: changing a select only refills its dependents; the cursor
+   moves on Go (or on a quick-jump button). */
 function bindDatePicker(box, onPick) {
   box.addEventListener('change', (e) => {
-    const sel = e.target.closest('[data-dp]');
+    const sel = e.target.closest('select[data-dp]');
     if (!sel) return;
     const y = Number($('[data-dp="y"]', box).value);
-    const m = Number($('[data-dp="m"]', box).value);
-    // Rebuild the day list whenever the month actually changes, so February
-    // never offers 31 days.
+    let m = Number($('[data-dp="m"]', box).value);
+    if (sel.dataset.dp === 'y') m = fillMonthOptions(box, y, m);
     const key = `${y}-${m}`;
     if (box.dataset.dpym !== key) {
       const keep = Number($('[data-dp="d"]', box).value) || 1;
       rebuildDayOptions(box, y, m, keep);
       box.dataset.dpym = key;
     }
-    const day = Math.min(Number($('[data-dp="d"]', box).value), daysInMonth(y, m));
-    onPick(iso(new Date(y, m, day)));
   });
   box.addEventListener('click', (e) => {
     const go = e.target.closest('[data-dp="go"]');
     const q = e.target.closest('[data-dp="q"]');
-    if (go) { go.dispatchEvent(new Event('change', { bubbles: true })); return; }
-    if (q) onPick(addDays(todayISO(), Number(q.dataset.off)));
+    if (go) { onPick(readDatePicker(box)); return; }
+    if (q) onPick(clampDate(addDays(todayISO(), Number(q.dataset.off))));
   });
 }
 
 let dailyPickerOpen = false, calPickerOpen = false;
 
 function pickDate(date, opts = {}) {
-  UI.cursor = date;
-  const d = parseISO(date);
+  UI.cursor = clampDate(date);
+  const d = parseISO(UI.cursor);
   UI.calMonth = { y: d.getFullYear(), m: d.getMonth() };
   if (opts.close) {
     dailyPickerOpen = calPickerOpen = false;
@@ -436,16 +462,111 @@ async function saveFile(filename, text, mime) {
   return 'downloaded';
 }
 
-$('#btnExportJsonl').onclick = async () => {
-  const how = await saveFile(`star-jar-events-${todayISO()}.jsonl`, Log.toJSONL(), 'application/x-ndjson');
-  if (how === 'shared') toast(`${Log.count()} events ready to save or send`);
-  else if (how === 'downloaded') toast(`${Log.count()} events exported — append-only, keep it safe`);
-};
-$('#btnExportCsv').onclick = async () => {
-  const how = await saveFile(`star-jar-events-${todayISO()}.csv`, Log.toCSV(), 'text/csv');
-  if (how === 'shared') toast(`${Log.count()} events ready to save or send`);
-  else if (how === 'downloaded') toast(`${Log.count()} events exported to CSV`);
-};
+/* ============================================================
+   EXPORT — one menu, four formats
+   ------------------------------------------------------------
+   - Whole jar (JSON): the portable backup another device can import.
+   - Event log (JSONL / CSV): the append-only history, one line per event.
+   - Spreadsheet (.xls): a real Excel workbook via SpreadsheetML — two sheets
+     (Events + Days) with no third-party library to ship or break offline.
+   ============================================================ */
+function toExcelXML() {
+  const xe = (v) => String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  const cell = (v, num, head) =>
+    head ? `<Cell ss:StyleID="h"><Data ss:Type="String">${xe(v)}</Data></Cell>`
+         : num && v !== '' && v != null
+           ? `<Cell><Data ss:Type="Number">${v}</Data></Cell>`
+           : `<Cell><Data ss:Type="String">${xe(v)}</Data></Cell>`;
+  const row = (vals) => `<Row>${vals.join('')}</Row>`;
+  const head = (cols) => row(cols.map((c) => cell(c, 0, 1)));
+
+  const evCols = ['id', 'ts', 'iso_time', 'date', 'weekday', 'type', 'label', 'stars', 'mood', 'note'];
+  const evRows = (Store.state.events || []).map((e) => {
+    const d = new Date(e.ts);
+    return row([
+      cell(e.id), cell(e.ts, 1), cell(d.toISOString()), cell(e.date),
+      cell(DOW[d.getDay()]), cell(e.type), cell(e.label),
+      cell(e.stars, 1), cell(e.mood), cell(e.note),
+    ]);
+  });
+
+  const dayCols = ['date', 'weekday', 'tasks_done', 'stars', 'mood', 'proud_note', 'bonuses'];
+  const dayRows = Object.keys(Store.state.days).sort().map((k) => {
+    const rec = Store.state.days[k];
+    const d = parseISO(k);
+    const bonus = (rec.bonus || []).map((b) => `${b.label} (+${b.stars})`).join('; ');
+    return row([
+      cell(k), cell(DOW[d.getDay()]), cell((rec.ticks || []).length, 1),
+      cell(Calc.dayStars(k), 1), cell(rec.mood || ''), cell(rec.proud || ''), cell(bonus),
+    ]);
+  });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles><Style ss:ID="h"><Font ss:Bold="1"/></Style></Styles>
+<Worksheet ss:Name="Events"><Table>
+<Column ss:AutoFitWidth="1"/>
+${head(evCols)}
+${evRows.join('\n')}
+</Table></Worksheet>
+<Worksheet ss:Name="Days"><Table>
+<Column ss:AutoFitWidth="1"/>
+${head(dayCols)}
+${dayRows.join('\n')}
+</Table></Worksheet>
+</Workbook>`;
+}
+
+async function exportJar(kind) {
+  let how;
+  if (kind === 'json') {
+    how = await saveFile(`star-jar-${todayISO()}.json`,
+      JSON.stringify(Store.state, null, 2), 'application/json');
+    if (how === 'cancelled') return;
+    toast(how === 'shared' ? 'Ready to save or send' : 'Whole jar exported — keep it somewhere safe');
+  } else if (kind === 'jsonl') {
+    how = await saveFile(`star-jar-events-${todayISO()}.jsonl`, Log.toJSONL(), 'application/x-ndjson');
+    if (how === 'shared') toast(`${Log.count()} events ready to save or send`);
+    else if (how === 'downloaded') toast(`${Log.count()} events exported — append-only, keep it safe`);
+  } else if (kind === 'csv') {
+    how = await saveFile(`star-jar-events-${todayISO()}.csv`, Log.toCSV(), 'text/csv');
+    if (how === 'shared') toast(`${Log.count()} events ready to save or send`);
+    else if (how === 'downloaded') toast(`${Log.count()} events exported to CSV`);
+  } else if (kind === 'xls') {
+    how = await saveFile(`star-jar-${todayISO()}.xls`, toExcelXML(), 'application/vnd.ms-excel');
+    if (how === 'cancelled') return;
+    toast(how === 'shared' ? 'Spreadsheet ready to save or send' : 'Spreadsheet exported — opens in Excel');
+  }
+}
+
+/* Dropdown helper: the button toggles its menu; a click anywhere else or on
+   an item closes it. Works for both export menus (timeline card + footer). */
+function wireMenu(btnId, menuId) {
+  const btn = $('#' + btnId), menu = $('#' + menuId);
+  if (!btn || !menu) return;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const wasOpen = !menu.hidden;
+    document.querySelectorAll('.menu').forEach((m) => { m.hidden = true; });
+    menu.hidden = wasOpen;
+    btn.setAttribute('aria-expanded', String(!wasOpen));
+  });
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-x]');
+    if (!item) return;
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    exportJar(item.dataset.x);
+  });
+}
+wireMenu('btnExportMenu', 'exportMenu');
+wireMenu('btnExportMenuF', 'exportMenuF');
+document.addEventListener('click', () => {
+  document.querySelectorAll('.menu').forEach((m) => { m.hidden = true; });
+});
 
 /* ============================================================
    SYNC — one panel, whichever provider is configured.
@@ -726,21 +847,42 @@ const catVars = (name) => {
   return `--cat:var(${k.c});--cat-soft:var(${k.s});--cat-text:var(${k.t})`;
 };
 
+/* True when the day in view hasn't arrived yet — look, but don't tick. */
+const isFutureDay = () => UI.cursor > todayISO();
+
 function renderTasks() {
   const rec = ensureDay(UI.cursor);
   const list = $('#taskList');
   const done = new Set(rec.ticks);
+  const future = isFutureDay();
 
-  list.innerHTML = Store.state.tasks.map((t, i) => {
+  // Tasks with a schedule are visible on every day, but only tickable while
+  // the day in view sits inside their from..until window.
+  const active = Calc.tasksFor(UI.cursor);
+  const activeIds = new Set(active.map((t) => t.id));
+
+  $('#futureBanner').hidden = !future;
+
+  const schedLabel = (t) => {
+    if (!t.from && !t.to) return '';
+    const f = t.from ? prettyDate(t.from) : '…';
+    const u = t.to ? prettyDate(t.to) : '…';
+    return `<div class="task__sched" title="Runs ${f} → ${u}">🗓 ${f} → ${u}</div>`;
+  };
+
+  const row = (t, i, off) => {
     const isDone = done.has(t.id);
-    return `<div class="task ${isDone ? 'task--done' : ''} ${t.sub ? 'task--sub' : ''}"
+    const locked = future || off;
+    return `<div class="task ${isDone ? 'task--done' : ''} ${t.sub ? 'task--sub' : ''} ${locked ? 'task--off' : ''}"
                  style="${catVars(t.cat)}; animation-delay:${Math.min(i * 26, 420)}ms" data-id="${t.id}">
-      <button class="task__check" data-act="toggle" data-id="${t.id}"
-              aria-pressed="${isDone}" aria-label="${isDone ? 'Undo' : 'Mark done'}: ${escapeHtml(t.name)}">
+      <button class="task__check" data-act="toggle" data-id="${t.id}" ${locked ? 'disabled' : ''}
+              aria-pressed="${isDone}"
+              aria-label="${future ? 'This day has not arrived yet' : off ? 'Not scheduled on this day' : isDone ? 'Undo' : 'Mark done'}: ${escapeHtml(t.name)}"
+              title="${future ? 'This day has not arrived yet' : off ? 'Not scheduled on this day' : ''}">
         <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
       </button>
       <span class="task__icon" aria-hidden="true">${t.icon || '⭐'}</span>
-      <div class="task__name">${escapeHtml(t.name)}</div>
+      <div class="task__name">${escapeHtml(t.name)}${schedLabel(t)}</div>
       <div class="task__cat"><span class="task__catdot" aria-hidden="true"></span>${escapeHtml(t.cat || 'Other')}</div>
       <div class="task__val" title="${t.stars} star${t.stars === 1 ? '' : 's'}">
         <svg style="fill:var(--butter-500)"><use href="#i-star"/></svg><span>${t.stars}</span>
@@ -754,9 +896,16 @@ function renderTasks() {
         </button>
       </div>
     </div>`;
-  }).join('') || `<div class="empty"><div class="empty__ico">🗒️</div><p>No tasks yet — add your first one below.</p></div>`;
+  };
 
-  $('#taskCountChip').textContent = `${done.size} / ${Store.state.tasks.length}`;
+  const activeRows = Store.state.tasks.filter((t) => activeIds.has(t.id));
+  const offRows = Store.state.tasks.filter((t) => !activeIds.has(t.id));
+  list.innerHTML =
+    activeRows.map((t, i) => row(t, i, false)).join('') +
+    offRows.map((t, i) => row(t, activeRows.length + i, true)).join('') ||
+    `<div class="empty"><div class="empty__ico">🗒️</div><p>No tasks yet — add your first one below.</p></div>`;
+
+  $('#taskCountChip').textContent = `${done.size} / ${active.length}`;
   $('#taskDayLabel').textContent =
     UI.cursor === todayISO() ? 'today' : longDate(UI.cursor).split(',')[0].toLowerCase();
 }
@@ -768,8 +917,10 @@ $('#taskList').addEventListener('click', (e) => {
   const rec = ensureDay(UI.cursor);
 
   if (act === 'toggle') {
-    const i = rec.ticks.indexOf(id);
+    if (isFutureDay()) return;                 // tomorrow's stars can't be ticked yet
     const t = Store.state.tasks.find((x) => x.id === id);
+    if (!t || !taskActiveOn(t, UI.cursor)) return;   // outside its schedule
+    const i = rec.ticks.indexOf(id);
     const before = Calc.dayStars(UI.cursor);
     if (i >= 0) {
       rec.ticks.splice(i, 1);
@@ -798,6 +949,8 @@ $('#taskList').addEventListener('click', (e) => {
     $('#tfName').value = t.name;
     $('#tfStars').value = t.stars;
     $('#tfCat').value = t.cat || 'Other';
+    $('#tfFrom').value = t.from || '';
+    $('#tfTo').value = t.to || '';
     $('#tfSubmit').textContent = 'Save changes';
     $('#tfSubmit').classList.remove('btn--primary');
     $('#tfSubmit').classList.add('btn--mint');
@@ -840,16 +993,26 @@ $('#taskForm').addEventListener('submit', (e) => {
   const cat = $('#tfCat').value;
   if (!name) return;
 
+  // Optional schedule window. Empty = long-term task with no bound.
+  let from = $('#tfFrom').value || '';
+  let to = $('#tfTo').value || '';
+  if (from) from = clampDate(from);
+  if (to) to = clampDate(to);
+  if (from && to && from > to) {
+    toast('The start date is after the stop date — please swap them');
+    return;
+  }
+
   if (UI.editingTask) {
     const t = Store.state.tasks.find((x) => x.id === UI.editingTask);
-    if (t) Object.assign(t, { icon, name, stars, cat });
+    if (t) Object.assign(t, { icon, name, stars, cat, from, to });
     Log.append('task.edit', { label: name, stars, note: cat });
     toast('Task updated');
     resetTaskForm();
   } else {
     Store.state.tasks.push({
       id: 't' + Date.now().toString(36) + Math.floor(Math.random() * 90 + 10),
-      icon, name, stars, cat,
+      icon, name, stars, cat, from, to,
     });
     Log.append('task.add', { label: name, stars, note: cat });
     toast('Task added — nice one!');
@@ -864,6 +1027,8 @@ function resetTaskForm() {
   $('#tfIcon').value = '⭐';
   $('#tfStars').value = '1';
   $('#tfCat').value = CATEGORIES[0];
+  $('#tfFrom').value = '';
+  $('#tfTo').value = '';
   $('#tfSubmit').textContent = 'Add task';
   $('#tfSubmit').classList.add('btn--primary');
   $('#tfSubmit').classList.remove('btn--mint');
@@ -901,9 +1066,15 @@ $('#moodRow').addEventListener('click', (e) => {
 function renderBonus() {
   const rec = ensureDay(UI.cursor);
   const box = $('#bonusList');
+  const future = isFutureDay();
+  // Future days are read-only: no bonus stars can be added or removed yet.
+  $('#bfLabel').disabled = future;
+  $('#bfStars').disabled = future;
+  const bfBtn = $('#bonusForm button[type="submit"], #bonusForm .btn');
+  if (bfBtn) bfBtn.disabled = future;
   if (!rec.bonus.length) {
     box.innerHTML = `<p style="font-size:.84rem;color:var(--ink-soft);font-weight:600">
-      No extra bonuses today. Got something extra nice? Add it here.</p>`;
+      ${future ? 'Bonus stars unlock when this day arrives.' : 'No extra bonuses today. Got something extra nice? Add it here.'}</p>`;
     return;
   }
   box.innerHTML = rec.bonus.map((b, i) => `
@@ -911,12 +1082,12 @@ function renderBonus() {
       <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--butter-500)"><use href="#i-star"/></svg>
       <span>${escapeHtml(b.label)}</span>
       <strong style="font-family:var(--f-num)">+${b.stars}</strong>
-      <button data-bdel="${i}" aria-label="Remove ${escapeHtml(b.label)}">×</button>
+      <button data-bdel="${i}" ${future ? 'disabled' : ''} aria-label="Remove ${escapeHtml(b.label)}">×</button>
     </div>`).join('');
 }
 $('#bonusList').addEventListener('click', (e) => {
   const b = e.target.closest('[data-bdel]');
-  if (!b) return;
+  if (!b || b.disabled || isFutureDay()) return;
   const rec = ensureDay(UI.cursor);
   const [item] = rec.bonus.splice(Number(b.dataset.bdel), 1);
   Log.append('bonus.remove', { label: item.label, stars: item.stars });
@@ -926,6 +1097,7 @@ $('#bonusList').addEventListener('click', (e) => {
 });
 $('#bonusForm').addEventListener('submit', (e) => {
   e.preventDefault();
+  if (isFutureDay()) return;
   const label = $('#bfLabel').value.trim();
   const stars = Math.max(1, Math.min(10, Number($('#bfStars').value) || 1));
   if (!label) return;
@@ -1094,19 +1266,6 @@ function renderJar() {
              style="animation-delay:${i * 0.5}s"/>`;
   }).join('') : '';
 
-  // The spent layer settles at the bottom of the fill: those stars were earned
-  // but have already gone out as prizes, so they read as sunk rather than lost.
-  const spentPct = Calc.spentPct();
-  const liquidH = bottom - fillY;
-  const bandH = liquidH * (spentPct / 100);
-  const spentBand = spentPct > 0.5 ? `
-    <g>
-      <rect x="58" y="${(bottom - bandH).toFixed(1)}" width="184" height="${(bandH + 12).toFixed(1)}"
-            fill="var(--pink-400)" opacity=".5"/>
-      <line x1="58" y1="${(bottom - bandH).toFixed(1)}" x2="242" y2="${(bottom - bandH).toFixed(1)}"
-            stroke="var(--pink-600)" stroke-width="2.4" stroke-dasharray="7 6" opacity=".85"/>
-    </g>` : '';
-
   stage.innerHTML = `
   <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Star jar ${Math.round(pct * 100)} percent full">
     <defs>
@@ -1134,7 +1293,6 @@ function renderJar() {
           <rect x="58" y="${fillY.toFixed(1)}" width="184" height="${(bottom - fillY + 14).toFixed(1)}" fill="url(#liquidGrad)" opacity=".82"/>
           <ellipse cx="150" cy="${fillY.toFixed(1)}" rx="92" ry="11" fill="var(--butter-200)" opacity=".95"/>
         </g>` : ''}
-      ${spentBand}
       ${bubbles}
       ${stars.join('')}
     </g>
@@ -1153,15 +1311,15 @@ function renderJar() {
 
   $('#jarMsg').textContent = Calc.message();
   $('#jarChip').textContent = `${Math.round(pct * 100)}% full`;
-  $('#jTotal').textContent = total;
-  $('#jTotalSub').textContent = `${Calc.totalCheckIns()} check-ins`;
-  $('#jGoal').textContent = Store.state.profile.goal;
   const bal = Calc.balance();
   const spent = Calc.spentStars();
-  $('#jBalance').textContent = bal;
-  $('#jBalanceSub').textContent = spent
-    ? `${spent}★ already spent`
-    : 'none spent yet';
+  // "In the jar" is the live, spendable balance — it really drops after a prize.
+  $('#jTotal').textContent = bal;
+  $('#jTotalSub').textContent = spent ? `${spent}★ traded for prizes` : 'ready to spend';
+  $('#jGoal').textContent = Store.state.profile.goal;
+  // "Earned all time" keeps the full history so progress is never forgotten.
+  $('#jBalance').textContent = total;
+  $('#jBalanceSub').textContent = spent ? `${spent}★ already spent` : 'before any prizes';
   $('#jDays').textContent = Calc.totalCheckIns();
   $('#rewardText').textContent = Store.state.profile.reward || '—';
 
@@ -1171,9 +1329,9 @@ function renderJar() {
     legend.hidden = spent <= 0;
     if (spent > 0) {
       legend.innerHTML = `<span class="jar-legend__swatch"></span>
-        <span><strong>${spent}★</strong> of those ${total}★ have been spent on prizes —
-        the dashed pink layer at the bottom of the jar. They are gone from what you can
-        spend, but they still count toward filling the jar.</span>`;
+        <span><strong>${spent}★</strong> have been traded for prizes, so the jar now holds
+        <strong>${bal}★</strong> of the <strong>${total}★</strong> earned all time.
+        Every trade is listed under <em>Stars I've spent</em> — and it can be undone there.</span>`;
     }
   }
 }
@@ -1329,9 +1487,9 @@ function doRedeem(p) {
                <span>Stars to spend</span><strong class="n">−${p.cost}</strong>
              </span>
              <span class="redeem-preview__row">
-               <span>Left to spend after</span><strong class="n">${bal - p.cost}</strong>
+               <span>Left in the jar after</span><strong class="n">${bal - p.cost}</strong>
              </span>
-             <span class="redeem-preview__note">Stars already in the jar stay there — spending only lowers what is left to spend.</span>
+             <span class="redeem-preview__note">The stars really leave the jar — the total drops to what is actually left. The trade is recorded under Stars I've spent, where it can be undone.</span>
            </div>`,
     actions: [
       { label: 'Not yet' },
@@ -1492,12 +1650,18 @@ $('#calGrid').addEventListener('click', (e) => {
   toast(`Showing ${longDate(UI.cursor)} — ${Calc.dayStars(UI.cursor)} star${Calc.dayStars(UI.cursor) === 1 ? '' : 's'}`);
 });
 
+/* The calendar never leaves the DATE_MIN..DATE_MAX window:
+   October 2026 is the first page, December 2099 the last. */
+const CAL_MIN = { y: Number(DATE_MIN.slice(0, 4)), m: Number(DATE_MIN.slice(5, 7)) - 1 };
+const CAL_MAX = { y: Number(DATE_MAX.slice(0, 4)), m: Number(DATE_MAX.slice(5, 7)) - 1 };
 $('#calPrev').onclick = () => {
+  if (UI.calMonth.y === CAL_MIN.y && UI.calMonth.m === CAL_MIN.m) return;
   const m = UI.calMonth.m - 1;
   UI.calMonth = m < 0 ? { y: UI.calMonth.y - 1, m: 11 } : { y: UI.calMonth.y, m };
   renderCalendar();
 };
 $('#calNext').onclick = () => {
+  if (UI.calMonth.y === CAL_MAX.y && UI.calMonth.m === CAL_MAX.m) return;
   const m = UI.calMonth.m + 1;
   UI.calMonth = m > 11 ? { y: UI.calMonth.y + 1, m: 0 } : { y: UI.calMonth.y, m };
   renderCalendar();
@@ -1558,32 +1722,27 @@ function syncReward() { if (document.activeElement !== rewardInput) rewardInput.
 
 /* Keep an open picker showing the day currently in view. */
 function syncPickers() {
-  if (dailyPickerOpen) {
-    const box = $('#datepickDaily');
+  [dailyPickerOpen ? $('#datepickDaily') : null,
+   calPickerOpen ? $('#datepickCal') : null].forEach((box) => {
+    if (!box) return;
     const d = parseISO(UI.cursor);
     const yS = $('[data-dp="y"]', box), mS = $('[data-dp="m"]', box);
-    if (yS && Number(yS.value) !== d.getFullYear()) yS.value = String(d.getFullYear());
-    if (mS && Number(mS.value) !== d.getMonth()) {
-      mS.value = String(d.getMonth());
-      rebuildDayOptions(box, d.getFullYear(), d.getMonth(), d.getDate());
+    if (!yS || !mS) return;
+    const y = d.getFullYear(), m = d.getMonth();
+    if (Number(yS.value) !== y) {
+      yS.value = String(y);
+      fillMonthOptions(box, y, m);
+    }
+    if (Number(mS.value) !== m) mS.value = String(m);
+    const key = `${y}-${m}`;
+    if (box.dataset.dpym !== key) {
+      rebuildDayOptions(box, y, m, d.getDate());
+      box.dataset.dpym = key;
     } else {
       const dS = $('[data-dp="d"]', box);
       if (dS && Number(dS.value) !== d.getDate()) dS.value = String(d.getDate());
     }
-  }
-  if (calPickerOpen) {
-    const box = $('#datepickCal');
-    const d = parseISO(UI.cursor);
-    const yS = $('[data-dp="y"]', box), mS = $('[data-dp="m"]', box);
-    if (yS && Number(yS.value) !== d.getFullYear()) yS.value = String(d.getFullYear());
-    if (mS && Number(mS.value) !== d.getMonth()) {
-      mS.value = String(d.getMonth());
-      rebuildDayOptions(box, d.getFullYear(), d.getMonth(), d.getDate());
-    } else {
-      const dS = $('[data-dp="d"]', box);
-      if (dS && Number(dS.value) !== d.getDate()) dS.value = String(d.getDate());
-    }
-  }
+  });
 }
 
 /* Month changes can shorten the day list (Jan 31 → Feb 28); rebuild it. */
@@ -1663,7 +1822,9 @@ $('#btnSettings').onclick = () => {
           Stars come only from ticked tasks — there is no extra bonus just for
           showing up, and none for a full week. Whatever a task is worth is
           what she earns.
-          <br><br>Stars are never taken away.
+          <br><br>Redeeming a prize really spends the stars: they come out of the
+          jar and the total drops to what is actually left. Every redemption is
+          recorded under Stars I've spent and can be undone there.
         </p>
 
         <div>
@@ -1729,20 +1890,12 @@ $('#modal').addEventListener('click', async (e) => {
 });
 
 /* ============================================================
-   IMPORT / EXPORT / RESET
+   IMPORT / RESET   (export lives in the Export ▾ menus above)
    ============================================================ */
-$('#btnExport').onclick = async () => {
-  const how = await saveFile(
-    `star-jar-${todayISO()}.json`,
-    JSON.stringify(Store.state, null, 2),
-    'application/json');
-  if (how === 'cancelled') return;
-  toast(how === 'shared'
-    ? 'Ready to save or send'
-    : 'Exported — keep it somewhere safe');
-};
 $('#btnCloudSetup').onclick = () => openCloudSettings();
 $('#btnImport').onclick = () => $('#fileImport').click();
+const btnImport2 = $('#btnImport2');
+if (btnImport2) btnImport2.onclick = () => $('#fileImport').click();
 $('#fileImport').onchange = (e) => {
   const f = e.target.files[0];
   e.target.value = '';
@@ -1789,7 +1942,7 @@ $('#fileImport').onchange = (e) => {
           ${rows.map(([k, v]) => `<span class="redeem-preview__row">
             <span>${k}</span><strong class="n">+${v}</strong></span>`).join('')}
           <span class="redeem-preview__row">
-            <span>Stars you have now</span><strong class="n">${Calc.allStars()}</strong></span>
+            <span>Stars in your jar now</span><strong class="n">${Calc.balance()}</strong></span>
           <span class="redeem-preview__note">Saved on the other device: ${
             d.savedAt ? new Date(d.savedAt).toLocaleString() : 'unknown date'}.</span>
         </div>`,
@@ -1816,7 +1969,7 @@ $('#fileImport').onchange = (e) => {
 };
 
 function afterImport() {
-  $('#brand__txt h1').textContent = `${Store.state.profile.name}'s Star Jar`;
+  $('.brand__txt h1').textContent = `${Store.state.profile.name}'s Star Jar`;
   document.title = `${Store.state.profile.name}'s Star Jar`;
   renderAll();
 }
@@ -1830,7 +1983,7 @@ $('#btnReset').onclick = () => {
       {
         label: 'Reset everything', cls: 'btn--danger', fn: () => {
           Store.reset();
-          $('#brand__txt h1').textContent = `${Store.state.profile.name}'s Star Jar`;
+          $('.brand__txt h1').textContent = `${Store.state.profile.name}'s Star Jar`;
           document.title = `${Store.state.profile.name}'s Star Jar`;
           renderAll();
           toast('Back to the demo jar');
@@ -1844,17 +1997,17 @@ $('#btnReset').onclick = () => {
    RENDER ALL + HEADER COUNTER
    ============================================================ */
 function renderHeader() {
-  const total = Calc.allStars();
+  const bal = Calc.balance();
   const spent = Calc.spentStars();
+  const earned = Calc.allStars();
   const pill = $('#starTotal');
-  pill.textContent = total;
-  // Say plainly which number this is: the lifetime jar total never falls,
-  // while the spendable balance drops as prizes are redeemed. Conflating the
-  // two is what makes a correct total look like it doubled.
+  pill.textContent = bal;
+  // The pill shows the stars actually in the jar right now — redeeming a
+  // prize makes this number drop for real. The tooltip keeps the full story.
   const el = $('#starpill');
   if (el) {
-    el.title = `${total} stars earned in total`
-      + (spent ? `\n${spent}★ already spent on prizes\n${Calc.balance()}★ left to spend` : '\nnothing spent yet')
+    el.title = `${bal} stars in the jar right now`
+      + (spent ? `\n${spent}★ traded for prizes\n${earned}★ earned all time` : '\nEvery star earned so far')
       + '\n\nStars come only from ticked tasks. There is no extra bonus for'
       + ' showing up or for a full week.';
   }

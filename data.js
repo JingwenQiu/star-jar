@@ -26,23 +26,23 @@ const STORE_KEY = 'superstar-star-jar:v2';
 
 /* ---------- Seed: the 17 habits from rows 9-25 ---------- */
 const SEED_TASKS = [
-  { id: 't1',  icon: '🎒', name: 'Pack the schoolbag (before sleep)',        stars: 1, cat: 'Morning & Night' },
-  { id: 't2',  icon: '🪥', name: 'Brush teeth and moisturize my face (night)', stars: 1, cat: 'Morning & Night' },
+  { id: 't1',  icon: '🎒', name: 'Pack my schoolbag (before bedtime)',       stars: 1, cat: 'Morning & Night' },
+  { id: 't2',  icon: '🪥', name: 'Brush my teeth and moisturize my face (night)', stars: 1, cat: 'Morning & Night' },
   { id: 't3',  icon: '📚', name: 'Do my homework',                            stars: 3, cat: 'Learning' },
   { id: 't4',  icon: '🍽️', name: 'Wash the dishes',                           stars: 3, cat: 'Helping Out' },
-  { id: 't5',  icon: '👕', name: 'Put clothes in the wash',                    stars: 2, cat: 'Helping Out' },
+  { id: 't5',  icon: '👕', name: 'Put my clothes in the wash',                 stars: 2, cat: 'Helping Out' },
   { id: 't6',  icon: '🧺', name: 'Hang up the clothes',                        stars: 3, cat: 'Helping Out' },
   { id: 't7',  icon: '🛏️', name: 'Tidy my room',                              stars: 2, cat: 'Helping Out' },
   { id: 't8',  icon: '🎈', name: 'Play time (something fun!)',                stars: 1, cat: 'Fun' },
-  { id: 't9',  icon: '📺', name: 'TV finished on time (30 min)',              stars: 2, cat: 'Fun' },
+  { id: 't9',  icon: '📺', name: 'Finish TV on time (30 minutes)',            stars: 2, cat: 'Fun' },
   { id: 't10', icon: '📖', name: 'Read for 15 minutes',                       stars: 2, cat: 'Learning' },
   { id: 't11', icon: '💛', name: 'Do something kind for someone',             stars: 3, cat: 'Bravery' },
-  { id: 't12', icon: '🙌', name: 'Asked for help when I needed it',           stars: 2, cat: 'Bravery' },
-  { id: 't13', icon: '💪', name: 'Tried something hard (any result!)',         stars: 3, cat: 'Bravery' },
-  { id: 't14', icon: '🎵', name: 'practice the flute (30 minute)',             stars: 4, cat: 'Learning', sub: true },
-  { id: 't15', icon: '🙋', name: 'raise my hand during class',                 stars: 1, cat: 'Learning', sub: true },
-  { id: 't16', icon: '🧮', name: 'write steps and check it (math)',            stars: 1, cat: 'Learning', sub: true },
-  { id: 't17', icon: '✏️', name: 'correct my answers I got wrong',            stars: 1, cat: 'Learning', sub: true },
+  { id: 't12', icon: '🙌', name: 'Ask for help when I need it',               stars: 2, cat: 'Bravery' },
+  { id: 't13', icon: '💪', name: 'Try something hard (any result!)',          stars: 3, cat: 'Bravery' },
+  { id: 't14', icon: '🎵', name: 'Practice the flute (30 minutes)',           stars: 4, cat: 'Learning', sub: true },
+  { id: 't15', icon: '🙋', name: 'Raise my hand in class',                    stars: 1, cat: 'Learning', sub: true },
+  { id: 't16', icon: '🧮', name: 'Write out the steps and check my work (math)', stars: 1, cat: 'Learning', sub: true },
+  { id: 't17', icon: '✏️', name: 'Correct the answers I got wrong',           stars: 1, cat: 'Learning', sub: true },
 ];
 
 const MOODS = [
@@ -106,6 +106,9 @@ const RULES = { neverDeduct: true, showUpBonus: 0, rainbowBonus: 0 };
 
 /* ---------- Date helpers ---------- */
 const DAY_MS = 86400000;
+/* The jar's usable window: days outside it cannot be picked or ticked. */
+const DATE_MIN = '2026-10-01';
+const DATE_MAX = '2099-12-31';
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DOW_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -130,6 +133,11 @@ const weekStartOf = (s) => {
   return addDays(s, -shift);
 };
 const todayISO = () => iso(new Date());
+/* Clamp a picked day into the jar's usable window. */
+const clampDate = (s) => (s < DATE_MIN ? DATE_MIN : s > DATE_MAX ? DATE_MAX : s);
+/* A task is long-term by default; optional from/to bound when it is offered.
+   Both bounds are inclusive; an empty bound means "no limit". */
+const taskActiveOn = (t, date) => (!t.from || date >= t.from) && (!t.to || date <= t.to);
 const prettyDate = (s) => {
   const d = parseISO(s);
   return `${MON[d.getMonth()]} ${d.getDate()}`;
@@ -799,8 +807,7 @@ const Calc = {
     return this.weekDays(anchor).filter((d) => this.activeOn(d)).length;
   },
 
-  /* Lifetime stars earned. This is the jar's trophy number and, following the
-     workbook's "stars never go away" rule, spending never reduces it. */
+  /* Lifetime stars earned — every star ever ticked or added, before prizes. */
   allStars() {
     const total = Object.keys(this.state.days).reduce((s, d) => s + this.dayStars(d), 0);
     return this.state.profile.carryOver + total;
@@ -811,15 +818,17 @@ const Calc = {
     return (this.state.redemptions || []).reduce((s, r) => s + (Number(r.cost) || 0), 0);
   },
 
-  /* Stars actually available to spend right now. */
+  /* Stars actually in the jar right now: earned minus redeemed.
+     Redeeming a prize really spends the stars, so the jar's total drops.
+     (Never below zero — a merged-in ledger cannot make the jar negative.) */
   balance() {
-    return this.allStars() - this.spentStars();
+    return Math.max(0, this.allStars() - this.spentStars());
   },
 
-  /* Jar fill is driven by lifetime stars, matching Excel C36 (=C34/C5). */
+  /* Jar fill is driven by the stars actually in the jar now. */
   fillPct() {
     const goal = Number(this.state.profile.goal) || 1;
-    return Math.max(0, Math.min(1, this.allStars() / goal));
+    return Math.max(0, Math.min(1, this.balance() / goal));
   },
 
   /* How far the spendable balance has eaten into the lifetime total. */
@@ -881,13 +890,21 @@ const Calc = {
   totalCheckIns() {
     return Object.keys(this.state.days).filter((d) => this.dayStars(d) > 0).length;
   },
+
+  /* Tasks offered on a given day — long-term ones always, scheduled ones
+     only inside their from/to window. */
+  tasksFor(date) {
+    return this.state.tasks.filter((t) => taskActiveOn(t, date));
+  },
+
   message() {
     const pct = this.fillPct();
-    const total = this.allStars();
+    const total = this.balance();
     const reward = this.state.profile.reward;
+    if (total <= 0 && this.allStars() > 0) return 'Every star has been spent — time to earn some more!';
     if (total <= 0) return "Your jar is ready for its very first star!";
     if (pct >= 1) return `THE JAR IS FULL! You earned: ${reward}`;
-    if (pct >= 0.75) return 'Almost full! So close - you are AMAZING!';
+    if (pct >= 0.75) return 'Almost full! So close — you are AMAZING!';
     if (pct >= 0.5) return 'More than halfway! Look how much you have done!';
     if (pct >= 0.25) return 'A quarter full and glowing! Keep going!';
     return "You've started filling your jar. Look at those stars!";

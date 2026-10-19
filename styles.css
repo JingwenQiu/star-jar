@@ -885,3 +885,103 @@ button, .day, .bar, .mood, .prize, .task{ touch-action:manipulation; }
 *::-webkit-scrollbar-track{ background:transparent; }
 *::-webkit-scrollbar-thumb{ background:var(--pink-200); border-radius:99px; border:3px solid var(--bg); }
 *::-webkit-scrollbar-thumb:hover{ background:var(--pink-300); }
+
+/* ---------- 26. Export dropdown menu ----------
+   A macaron pop-over: the trigger sits inline in a button row, the panel
+   floats below (or above with .menu--up). Click-away is handled in JS. */
+.menuwrap{ position:relative; display:inline-block; }
+.menu{
+  position:absolute; right:0; top:calc(100% + 8px); z-index:60; min-width:218px;
+  background:var(--surface); border:2px solid var(--line-strong);
+  border-radius:var(--r-md); box-shadow:var(--e3); padding:6px;
+  animation:menuIn var(--t-fast) var(--ease-bounce) backwards;
+  transform-origin:top right;
+}
+.menu--up{ top:auto; bottom:calc(100% + 8px); transform-origin:bottom right; animation-name:menuInUp; }
+@keyframes menuIn{ from{opacity:0; transform:scale(.86) translateY(-6px)} to{opacity:1; transform:none} }
+@keyframes menuInUp{ from{opacity:0; transform:scale(.86) translateY(6px)} to{opacity:1; transform:none} }
+.menu__item{
+  display:flex; align-items:center; gap:9px; width:100%; text-align:left;
+  padding:10px 12px; border-radius:var(--r-sm);
+  font-weight:800; font-size:.86rem; color:var(--ink-soft);
+  transition:background var(--t-fast), color var(--t-fast), transform var(--t-fast);
+}
+.menu__item:hover{ background:linear-gradient(120deg,var(--pink-50),var(--lilac-50)); color:var(--pink-700); transform:translateX(2px); }
+.menu__item + .menu__item{ border-top:1px dashed var(--line); }
+
+/* ---------- 27. Future-day banner ----------
+   Shown on the task card when the day in view has not arrived yet. */
+.futurebanner{
+  display:flex; align-items:center; gap:10px;
+  margin:-4px 0 14px; padding:11px 14px;
+  background:linear-gradient(120deg,var(--lilac-100),var(--sky-100));
+  border:2px solid var(--lilac-200); border-radius:var(--r-md);
+  font-size:.84rem; font-weight:700; color:var(--lilac-700);
+}
+.futurebanner__ico{ font-size:1.15rem; filter:drop-shadow(0 2px 3px rgba(122,91,200,.35)); animation:moonFloat 3.2s ease-in-out infinite; }
+@keyframes moonFloat{ 0%,100%{transform:translateY(0) rotate(-6deg)} 50%{transform:translateY(-3px) rotate(6deg)} }
+
+/* ---------- 28. Locked / unscheduled tasks ----------
+   A task outside its from..until window (or any task on a future day) stays
+   visible so it can be edited, but the checkbox is parked: dashed outline,
+   no colour, no pointer. */
+.task--off{ opacity:.58; }
+.task--off:hover{ opacity:.8; }
+.task__check[disabled]{
+  border-style:dashed; border-color:var(--line-strong); background:var(--surface-sunk);
+  cursor:not-allowed; transform:none;
+}
+.task__check[disabled]:hover{ background:var(--surface-sunk); transform:none; }
+.task--off .task__icon{ filter:grayscale(.55); }
+.task__sched{
+  display:inline-flex; align-items:center; gap:5px; margin-top:3px;
+  font-size:.68rem; font-weight:800; letter-spacing:.03em;
+  color:var(--sky-700); background:var(--sky-100);
+  border:1.5px solid var(--sky-200); border-radius:99px; padding:2px 9px;
+}
+
+/* ---------- 29. Extra delight ----------
+   Small, cheap touches that make the whole app feel more alive. */
+
+/* Cards breathe on hover (desktop only — phones have no hover). */
+@media (hover:hover){
+  .card{ transition:transform var(--t-base) var(--ease-out), box-shadow var(--t-base); }
+  .card:hover{ transform:translateY(-2px); box-shadow:var(--e3); }
+}
+
+/* The jar's stars twinkle — staggered by their document order. */
+.jar__star{ animation:twinkle 3.6s ease-in-out infinite; }
+.jar__star:nth-of-type(3n){ animation-delay:.7s; }
+.jar__star:nth-of-type(3n+1){ animation-delay:1.5s; }
+.jar__star:nth-of-type(4n){ animation-duration:4.6s; }
+@keyframes twinkle{ 0%,100%{opacity:1} 50%{opacity:.72} }
+
+/* Checking a task pops the box with a little jelly bounce. */
+.task--done .task__check{ animation:checkPop var(--t-slow) var(--ease-bounce); }
+@keyframes checkPop{ 0%{transform:scale(.72)} 55%{transform:scale(1.14)} 100%{transform:scale(1)} }
+
+/* Tiles lift and tint a touch deeper on hover. */
+@media (hover:hover){
+  .tile{ transition:transform var(--t-base) var(--ease-bounce), box-shadow var(--t-base); }
+  .tile:hover{ transform:translateY(-3px) scale(1.02); box-shadow:var(--e2); }
+}
+
+/* Mood buttons already sized; add a springy press. */
+.mood{ transition:transform var(--t-fast) var(--ease-bounce), box-shadow var(--t-base), border-color var(--t-base), background var(--t-base); }
+.mood:active{ transform:scale(.93); }
+
+/* Calendar cells get a soft lift too. */
+.cal__cell:not([disabled]){ transition:transform var(--t-fast) var(--ease-out), box-shadow var(--t-base), border-color var(--t-base); }
+.cal__cell:not([disabled]):hover{ transform:translateY(-2px) scale(1.04); box-shadow:var(--e1); z-index:1; }
+
+/* The star pill glows a little warmer so the counter feels precious. */
+.starpill{ position:relative; }
+.starpill::after{
+  content:''; position:absolute; inset:-6px; border-radius:inherit; z-index:-1;
+  background:radial-gradient(closest-side, rgba(255,191,60,.34), transparent);
+  opacity:.8;
+}
+
+/* Date-picker GO button gets the candy gradient so the flow reads:
+   pick → pick → press GO. */
+.datepick__go{ white-space:nowrap; }
